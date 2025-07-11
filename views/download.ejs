@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Preparing Your Download</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="text-white h-screen flex items-center justify-center">
+
+    <div class="glass rounded-xl p-8 w-full max-w-md text-center shadow-lg">
+        <h1 class="text-2xl font-extrabold text-red-400 mb-4">🎬 Your Download is Almost Ready</h1>
+        <p class="text-lg mb-4">Please wait <span id="timer" class="text-yellow-400 font-bold">15</span> seconds...</p>
+
+        <!-- Progress Circle -->
+        <div class="w-20 h-20 mx-auto mb-6 relative">
+            <svg class="absolute top-0 left-0" width="80" height="80">
+        <circle id="progressCircle" cx="40" cy="40" r="35" stroke="#f87171" stroke-width="5" fill="none" stroke-dasharray="220" stroke-dashoffset="0" />
+ </svg>
+        </div>
+
+        <!-- Hidden download buttons -->
+        <div id="downloadLinks" class="hidden mt-6 space-y-3">
+            <% if (movie.qualityLinks["480p"]) { %>
+                <a href="<%= movie.qualityLinks['480p'] %>" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
+      🔽 Download 480p
+    </a>
+                <% } %>
+
+                    <% if (movie.qualityLinks["720p"]) { %>
+                        <a href="<%= movie.qualityLinks['720p'] %>" target="_blank" class="block w-full text-center bg-green-600 hover:bg-green-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
+      🔽 Download 720p
+    </a>
+                        <% } %>
+
+                            <% if (movie.qualityLinks["1080p"]) { %>
+                                <a href="<%= movie.qualityLinks['1080p'] %>" target="_blank" class="block w-full text-center bg-purple-600 hover:bg-purple-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
+      🔽 Download 1080p
+    </a>
+                                <% } %>
+        </div>
+
+
+
+    </div>
+
+    <script>
+        let seconds = 15;
+        const timer = document.getElementById("timer");
+        const downloadLinks = document.getElementById("downloadLinks");
+        const progressCircle = document.getElementById("progressCircle");
+
+        const totalDash = 220;
+
+        const countdown = setInterval(() => {
+            seconds--;
+            timer.textContent = seconds;
+
+            const dashOffset = totalDash * (seconds / 15);
+            progressCircle.setAttribute("stroke-dashoffset", dashOffset);
+
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                downloadLinks.classList.remove("hidden");
+                timer.parentElement.style.display = "none";
+                progressCircle.setAttribute("stroke-dashoffset", 0);
+            }
+        }, 1000);
+    </script>
+
+</body>
+
+</html>

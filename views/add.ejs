@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Movie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-6">
+    <h1 class="text-3xl mb-4 font-bold">➕ Add New Movie</h1>
+    <form action="/admin/add" method="POST" class="grid gap-4">
+
+        <input type="text" name="title" placeholder="Title" required class="p-2 rounded bg-gray-800">
+
+        <textarea name="description" placeholder="Description" class="p-2 rounded bg-gray-800"></textarea>
+
+        <input type="text" name="cast" placeholder="Cast (comma-separated)" class="p-2 rounded bg-gray-800">
+        <input type="text" name="genre" placeholder="Genre (comma-separated)" class="p-2 rounded bg-gray-800">
+        <input type="text" name="movieLanguage" placeholder="Language" class="p-2 rounded bg-gray-800">
+        <input type="text" name="quality" placeholder="Quality (comma-separated)" class="p-2 rounded bg-gray-800">
+
+        <input type="url" name="poster" placeholder="Poster URL" class="p-2 rounded bg-gray-800">
+        <input type="text" name="screenshots" placeholder="Screenshot URLs (comma-separated)" class="p-2 rounded bg-gray-800">
+
+        <input type="url" name="qualityLinks[480p]" placeholder="480p Link" class="p-2 rounded bg-gray-800">
+        <input type="url" name="qualityLinks[720p]" placeholder="720p Link" class="p-2 rounded bg-gray-800">
+        <input type="url" name="qualityLinks[1080p]" placeholder="1080p Link" class="p-2 rounded bg-gray-800">
+        <input type="url" name="qualityLinks[other]" placeholder="Other Link" class="p-2 rounded bg-gray-800">
+
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Add Movie</button>
+    </form>
+</body>
+
+</html>

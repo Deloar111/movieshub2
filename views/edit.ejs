@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Movie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-950 text-white min-h-screen p-6 font-sans">
+
+    <div class="max-w-3xl mx-auto bg-gray-900 p-8 rounded-xl shadow-md">
+        <h1 class="text-3xl font-bold text-center mb-8 text-green-400">✏️ Edit Movie</h1>
+
+        <form action="/admin/edit/<%= movie._id %>" method="POST" class="space-y-5">
+
+            <!-- Title -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Title</label>
+                <input type="text" name="title" value="<%= movie.title %>" required class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Description</label>
+                <textarea name="description" rows="4" class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"><%= movie.description %></textarea>
+            </div>
+
+            <!-- Cast, Genre, Language, Quality -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Cast (comma separated)</label>
+                    <input type="text" name="cast" value="<%= movie.cast.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Genre (comma separated)</label>
+                    <input type="text" name="genre" value="<%= movie.genre.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Language</label>
+                    <input type="text" name="movieLanguage" value="<%= movie.movieLanguage %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Quality (comma separated)</label>
+                    <input type="text" name="quality" value="<%= movie.quality.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+            </div>
+
+            <!-- Poster -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Poster URL</label>
+                <input type="url" name="poster" value="<%= movie.poster %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+            </div>
+
+            <!-- Screenshots -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Screenshots (comma separated URLs)</label>
+                <input type="text" name="screenshots" value="<%= movie.screenshots.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+            </div>
+
+            <!-- Download Links -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">480p Link</label>
+                    <input type="url" name="qualityLinks[480p]" value="<%= movie.qualityLinks[" 480p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">720p Link</label>
+                    <input type="url" name="qualityLinks[720p]" value="<%= movie.qualityLinks[" 720p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">1080p Link</label>
+                    <input type="url" name="qualityLinks[1080p]" value="<%= movie.qualityLinks[" 1080p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Other Link</label>
+                    <input type="url" name="qualityLinks[other]" value="<%= movie.qualityLinks[" other "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mt-6">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition">
+          💾 Save Changes
+        </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+
+</html>
