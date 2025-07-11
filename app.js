@@ -3,7 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import path from "path";
 import Movie from "./models/movies.js";
-import adminAuth from "./middleware/adminAuth.js";
+import adminAuth from "./middleware/temp.js";
 import bodyParser from "body-parser";
 
 const app = express();
