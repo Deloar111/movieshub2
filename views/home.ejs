@@ -15,7 +15,6 @@
 </head>
 
 <body class="bg-[#0f0f0f] text-white">
-
     <!-- Header -->
     <header class="bg-gradient-to-r from-purple-900 to-indigo-800 p-4 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -25,91 +24,91 @@
 
     <!-- Search + Categories -->
     <section class="max-w-7xl mx-auto p-4">
-        <form method="GET" class="mb-6 flex flex-col sm:flex-row gap-3">
-            <input type="text" name="search" value="<%= searchQuery %>" placeholder="Search movies..." class="flex-grow px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600" />
-            <button type="submit" class="px-6 py-2 bg-red-600 rounded hover:bg-red-700 transition text-white font-semibold">Search</button>
-        </form>
+        <% if (isAdmin) { %>
+            <div class="mb-4">
+                <a href="/admin/add" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ Add Movie</a>
+            </div>
+            <% } %>
 
-        <div class="flex flex-wrap gap-3 mb-8">
-            <% const categories = ["All Movies", "Web Series", "South Hindi Dubbed", "Bollywood", "Hollywood Hindi", "Dual Audio"]; %>
-                <% categories.forEach(category => { %>
-                    <a href="/?category=<%= category %>" class="px-4 py-2 bg-gray-700 hover:bg-purple-700 text-sm rounded-full transition font-medium">
-                        <%= category %>
-                    </a>
-                    <% }) %>
+                <form method="GET" class="mb-6 flex flex-col sm:flex-row gap-3">
+                    <input type="text" name="search" value="<%= searchQuery %>" placeholder="Search movies..." class="flex-grow px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                    <button type="submit" class="px-6 py-2 bg-red-600 rounded hover:bg-red-700 transition text-white font-semibold">Search</button>
+                </form>
+
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <% const categories = ["All Movies", "Web Series", "South Hindi Dubbed", "Bollywood", "Hollywood Hindi", "Dual Audio"]; %>
+                        <% categories.forEach(category => { %>
+                            <a href="/?category=<%= category %>" class="px-4 py-2 bg-gray-700 hover:bg-purple-700 text-sm rounded-full transition font-medium">
+                                <%= category %>
+                            </a>
+                            <% }) %>
+                </div>
+    </section>
+
+    <!-- Trending Now -->
+    <section class="max-w-7xl mx-auto px-4 mb-12">
+        <h2 class="text-2xl font-bold mb-4 text-red-400">🔥 Trending Now</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <% trendingMovies.forEach(movie => { %>
+                <a href="/movies/<%= movie._id %>" class="bg-gray-900 hover:bg-gray-800 p-3 rounded-xl shadow-md transition">
+          <img src="<%= movie.poster %>" class="w-full h-48 object-cover rounded-lg mb-3">
+          <h3 class="text-base font-bold"><%= movie.title %></h3>
+        </a>
+                <% }) %>
         </div>
     </section>
 
-    <!-- ✅ Admin-only Add Button -->
-    <% if (isAdmin) { %>
-        <a href="/admin/add?admin=8892">Add Movie</a>
-        <a href="/admin/edit/<%= movie._id %>?admin=12345">Edit</a>
-        <a href="/admin/delete/<%= movie._id %>?admin=12345">Delete</a>
-        <% } %>
+    <!-- All Movies -->
+    <section class="max-w-7xl mx-auto px-4">
+        <h2 class="text-2xl font-bold mb-4 text-blue-400">🎬 All Movies</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <% movies.forEach(movie => { %>
+                <div class="bg-gray-900 hover:bg-gray-800 p-3 rounded-xl shadow-md transition">
+                    <a href="/movies/<%= movie._id %>">
+            <img src="<%= movie.poster %>" class="w-full h-48 object-cover rounded-lg mb-3">
+            <h3 class="text-base font-bold"><%= movie.title %></h3>
+          </a>
 
-            <!-- Trending Now -->
-            <section class="max-w-7xl mx-auto px-4 mb-12">
-                <h2 class="text-2xl font-bold mb-4 text-red-400">🔥 Trending Now</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <% trendingMovies.forEach(movie => { %>
-                        <a href="/movies/<%= movie._id %>" class="bg-gray-900 hover:bg-gray-800 p-3 rounded-xl shadow-md transition">
-                    <img src="<%= movie.poster %>" class="w-full h-48 object-cover rounded-lg mb-3">
-                    <h3 class="text-base font-bold"><%= movie.title %></h3>
-                </a>
-                        <% }) %>
-                </div>
-            </section>
+                    <p class="text-xs text-gray-400 mt-1">
+                        <%= movie.movieLanguage %>
+                    </p>
 
-            <!-- All Movies -->
-            <section class="max-w-7xl mx-auto px-4">
-                <h2 class="text-2xl font-bold mb-4 text-blue-400">🎬 All Movies</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <% movies.forEach(movie => { %>
-                        <div class="bg-gray-900 hover:bg-gray-800 p-3 rounded-xl shadow-md transition">
-                            <a href="/movies/<%= movie._id %>">
-                        <img src="<%= movie.poster %>" class="w-full h-48 object-cover rounded-lg mb-3">
-                        <h3 class="text-base font-bold"><%= movie.title %></h3>
-                    </a>
-                            <p class="text-xs text-gray-400 mt-1">
-                                <%= movie.movieLanguage %>
-                            </p>
-                            <div class="flex gap-2 mt-2 flex-wrap">
-                                <% movie.quality.forEach(q => { %>
-                                    <span class="bg-red-600 text-white text-xs px-2 py-1 rounded-full"><%= q %></span>
-                                    <% }) %>
-                            </div>
+                    <div class="flex gap-2 mt-2 flex-wrap">
+                        <% movie.quality.forEach(q => { %>
+                            <span class="bg-red-600 text-white text-xs px-2 py-1 rounded-full"><%= q %></span>
+                            <% }) %>
+                    </div>
 
-                            <% if (isAdmin) { %>
-                                <div class="mt-2 flex gap-3">
-                                    <a href="/admin/edit/<%= movie._id %>" class="text-yellow-400 text-xs">✏ Edit</a>
-                                    <a href="/admin/delete/<%= movie._id %>" class="text-red-400 text-xs">🗑 Delete</a>
-                                </div>
-                                <% } %>
+                    <% if (isAdmin) { %>
+                        <div class="mt-2 flex gap-3">
+                            <a href="/admin/edit/<%= movie._id %>" class="text-yellow-400 text-xs">✏ Edit</a>
+                            <a href="/admin/delete/<%= movie._id %>" class="text-red-400 text-xs">🗑 Delete</a>
                         </div>
-                        <% }) %>
+                        <% } %>
                 </div>
-            </section>
+                <% }) %>
+        </div>
+    </section>
 
-            <!-- Pagination -->
-            <div class="flex justify-center mt-12 space-x-2">
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>" class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-red-600' : 'bg-gray-700' %> hover:bg-purple-700 text-white font-semibold">
-                        <%= i %>
-                    </a>
-                    <% } %>
-            </div>
+    <!-- Pagination -->
+    <div class="flex justify-center mt-12 space-x-2">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>" class="px-4 py-2 rounded-lg <%= currentPage === i ? 'bg-red-600' : 'bg-gray-700' %> hover:bg-purple-700 text-white font-semibold">
+                <%= i %>
+            </a>
+            <% } %>
+    </div>
 
-            <!-- Footer -->
-            <footer class="bg-gray-800 mt-20 text-center py-6 text-sm text-gray-400">
-                <div class="space-x-4">
-                    <a href="/about-us" class="hover:underline">About Us</a>
-                    <a href="/privacy-policy" class="hover:underline">Privacy Policy</a>
-                    <a href="mailto:deloarhossen81722@gmail.com" class="hover:underline">Contact Us</a>
-                </div>
-                <p class="mt-2">&copy;
-                    <%= new Date().getFullYear() %> WatchView. All rights reserved.</p>
-            </footer>
-
+    <!-- Footer -->
+    <footer class="bg-gray-800 mt-20 text-center py-6 text-sm text-gray-400">
+        <div class="space-x-4">
+            <a href="/about-us" class="hover:underline">About Us</a>
+            <a href="/privacy-policy" class="hover:underline">Privacy Policy</a>
+            <a href="mailto:deloarhossen81722@gmail.com" class="hover:underline">Contact Us</a>
+        </div>
+        <p class="mt-2">&copy;
+            <%= new Date().getFullYear() %> WatchView. All rights reserved.</p>
+    </footer>
 </body>
 
 </html>
