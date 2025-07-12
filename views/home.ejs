@@ -42,11 +42,9 @@
 
     <!-- ✅ Admin-only Add Button -->
     <% if (isAdmin) { %>
-        <div class="max-w-7xl mx-auto px-4 mb-6">
-            <a href="/admin/add" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg shadow inline-block">
-                ➕ Add New Movie
-            </a>
-        </div>
+        <a href="/admin/add?admin=8892">Add Movie</a>
+        <a href="/admin/edit/<%= movie._id %>?admin=12345">Edit</a>
+        <a href="/admin/delete/<%= movie._id %>?admin=12345">Delete</a>
         <% } %>
 
             <!-- Trending Now -->
