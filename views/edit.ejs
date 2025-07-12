@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Edit Movie</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
     <div class="max-w-3xl mx-auto bg-gray-900 p-8 rounded-xl shadow-md">
         <h1 class="text-3xl font-bold text-center mb-8 text-green-400">✏️ Edit Movie</h1>
 
-        <form action="/admin/edit/<%= movie._id %>" method="POST" class="space-y-5">
+        <form action="/admin/edit/<%= movie._id %>?admin=8892" method="POST" class="space-y-5">
 
             <!-- Title -->
             <div>
@@ -82,8 +82,8 @@
             <!-- Submit Button -->
             <div class="text-center mt-6">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition">
-          💾 Save Changes
-        </button>
+                    💾 Save Changes
+                </button>
             </div>
         </form>
     </div>

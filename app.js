@@ -10,15 +10,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
 
-// Middlewares
+// Middleware
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(adminAuth); // ✅ adds isAdmin to all views
+app.use(adminAuth); // Adds res.locals.isAdmin
 
-// ✅ MongoDB Atlas Connection
+// MongoDB Connection
 mongoose.connect(
         process.env.MONGO_URL ||
         "mongodb+srv://deloarhossen:8PwxJE5xWkALIPK@watchview.x1xjpmm.mongodb.net/watchview?retryWrites=true&w=majority&appName=watchview"
@@ -26,7 +26,7 @@ mongoose.connect(
     .then(() => console.log("✅ MongoDB Connected"))
     .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// ✅ Home Page
+// Homepage
 app.get("/", async(req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -36,10 +36,14 @@ app.get("/", async(req, res) => {
 
         const query = {
             ...(searchQuery && { title: { $regex: searchQuery, $options: "i" } }),
-            ...(category && category !== "All Movies" && { genre: { $regex: category, $options: "i" } }),
+            ...(category && category !== "All Movies" && {
+                genre: { $regex: category, $options: "i" },
+            }),
         };
 
-        const movies = await Movie.find(query).skip((page - 1) * limit).limit(limit);
+        const movies = await Movie.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit);
         const totalMovies = await Movie.countDocuments(query);
         const totalPages = Math.ceil(totalMovies / limit);
         const trendingMovies = await Movie.find().sort({ createdAt: -1 }).limit(4);
@@ -56,7 +60,7 @@ app.get("/", async(req, res) => {
     }
 });
 
-// ✅ Dummy Seeder
+// Dummy Seeder
 app.get("/seed", async(req, res) => {
     await Movie.create({
         title: "Pushpa 2",
@@ -79,7 +83,7 @@ app.get("/seed", async(req, res) => {
     res.send("✅ Dummy movie added!");
 });
 
-// ✅ Movie Details Page
+// Details Page
 app.get("/movies/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -99,7 +103,7 @@ app.get("/movies/:id", async(req, res) => {
     }
 });
 
-// ✅ Download Page
+// Download Page
 app.get("/download/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -110,66 +114,78 @@ app.get("/download/:id", async(req, res) => {
     }
 });
 
-// ✅ Admin Add Movie
-app.get("/admin/add", adminAuth, (req, res) => {
-    res.render("add");
+// Admin Routes
+// Add Movie Form
+app.get("/admin/add", (req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+    res.render("add", { adminQuery: req.query.admin });
 });
 
-app.post("/admin/add", adminAuth, async(req, res) => {
+// Add Movie Handler
+app.post("/admin/add", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
     try {
         const movieData = {
             ...req.body,
-            cast: req.body.cast.split(","),
-            genre: req.body.genre.split(","),
-            quality: req.body.quality.split(","),
-            screenshots: req.body.screenshots.split(","),
+            cast: req.body.cast.split(",").map((s) => s.trim()),
+            genre: req.body.genre.split(",").map((s) => s.trim()),
+            quality: req.body.quality.split(",").map((s) => s.trim()),
+            screenshots: req.body.screenshots.split(",").map((s) => s.trim()),
+            qualityLinks: req.body.qualityLinks,
         };
         await Movie.create(movieData);
-        res.redirect("/");
+        res.redirect("/?admin=8892"); // ✅ Preserve admin
     } catch (err) {
         res.status(500).send("Failed to add movie");
     }
 });
 
-// ✅ Admin Edit Movie
-app.get("/admin/edit/:id", adminAuth, async(req, res) => {
+// Edit Movie Form
+app.get("/admin/edit/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
     const movie = await Movie.findById(req.params.id);
     if (!movie) return res.status(404).send("Movie not found");
-    res.render("edit", { movie });
+    res.render("edit", { movie, adminQuery: req.query.admin });
 });
 
-app.post("/admin/edit/:id", adminAuth, async(req, res) => {
+// Edit Movie Handler
+app.post("/admin/edit/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
     try {
         const updatedData = {
             ...req.body,
-            cast: req.body.cast.split(","),
-            genre: req.body.genre.split(","),
-            quality: req.body.quality.split(","),
-            screenshots: req.body.screenshots.split(","),
+            cast: req.body.cast.split(",").map((s) => s.trim()),
+            genre: req.body.genre.split(",").map((s) => s.trim()),
+            quality: req.body.quality.split(",").map((s) => s.trim()),
+            screenshots: req.body.screenshots.split(",").map((s) => s.trim()),
+            qualityLinks: req.body.qualityLinks,
         };
+
         await Movie.findByIdAndUpdate(req.params.id, updatedData);
-        res.redirect("/");
+        res.redirect("/?admin=8892"); // ✅ Keep admin flag
     } catch (err) {
         res.status(500).send("Failed to update movie");
     }
 });
 
-// ✅ Admin Delete Movie
-app.get("/admin/delete/:id", adminAuth, async(req, res) => {
+// Delete Movie
+app.get("/admin/delete/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
     await Movie.findByIdAndDelete(req.params.id);
-    res.redirect("/");
+    res.redirect("/?admin=8892"); // ✅ Keep admin flag
 });
 
-// ✅ Static Pages
+// Static Pages
 app.get("/about-us", (req, res) => {
     res.render("about");
 });
-
 app.get("/privacy-policy", (req, res) => {
     res.render("privacy");
 });
 
-// ✅ Start Server
+// Start Server
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
