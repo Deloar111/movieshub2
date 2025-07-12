@@ -7,7 +7,7 @@ import adminAuth from "./middleware/adminAuth.js";
 import bodyParser from "body-parser";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
 
 // Middlewares
@@ -16,14 +16,17 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(adminAuth); // ✅ this adds isAdmin to all templates
+app.use(adminAuth); // ✅ adds isAdmin to all views
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/movieshub")
+// ✅ MongoDB Atlas Connection
+mongoose.connect(
+        process.env.MONGO_URL ||
+        "mongodb+srv://deloarhossen:8PwxJE5xWkALIPK@watchview.x1xjpmm.mongodb.net/watchview?retryWrites=true&w=majority&appName=watchview"
+    )
     .then(() => console.log("✅ MongoDB Connected"))
-    .catch(err => console.error("❌ MongoDB Error:", err));
+    .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// ✅ Unified Home Route
+// ✅ Home Page
 app.get("/", async(req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -33,7 +36,7 @@ app.get("/", async(req, res) => {
 
         const query = {
             ...(searchQuery && { title: { $regex: searchQuery, $options: "i" } }),
-            ...(category && category !== "All Movies" && { genre: { $regex: category, $options: "i" } })
+            ...(category && category !== "All Movies" && { genre: { $regex: category, $options: "i" } }),
         };
 
         const movies = await Movie.find(query).skip((page - 1) * limit).limit(limit);
@@ -46,14 +49,14 @@ app.get("/", async(req, res) => {
             trendingMovies,
             currentPage: page,
             totalPages,
-            searchQuery
+            searchQuery,
         });
     } catch (err) {
         res.status(500).send("Error loading homepage");
     }
 });
 
-// Dummy Data Seeder
+// ✅ Dummy Seeder
 app.get("/seed", async(req, res) => {
     await Movie.create({
         title: "Pushpa 2",
@@ -65,18 +68,18 @@ app.get("/seed", async(req, res) => {
         poster: "https://i.imgur.com/P5cL4pp.jpeg",
         screenshots: [
             "https://i.imgur.com/3Q1JJoE.jpg",
-            "https://i.imgur.com/uXjlzJq.jpg"
+            "https://i.imgur.com/uXjlzJq.jpg",
         ],
         qualityLinks: {
             "480p": "https://drive.google.com/480plink",
             "720p": "https://drive.google.com/720plink",
-            "1080p": "https://drive.google.com/1080plink"
-        }
+            "1080p": "https://drive.google.com/1080plink",
+        },
     });
     res.send("✅ Dummy movie added!");
 });
 
-// Movie Details Page with Suggestions
+// ✅ Movie Details Page
 app.get("/movies/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -86,8 +89,8 @@ app.get("/movies/:id", async(req, res) => {
             _id: { $ne: movie._id },
             $or: [
                 { genre: { $in: movie.genre } },
-                { movieLanguage: movie.movieLanguage }
-            ]
+                { movieLanguage: movie.movieLanguage },
+            ],
         }).limit(6);
 
         res.render("details", { movie, suggestions });
@@ -96,7 +99,7 @@ app.get("/movies/:id", async(req, res) => {
     }
 });
 
-// Download page
+// ✅ Download Page
 app.get("/download/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -107,7 +110,7 @@ app.get("/download/:id", async(req, res) => {
     }
 });
 
-// Admin: Add Movie
+// ✅ Admin Add Movie
 app.get("/admin/add", adminAuth, (req, res) => {
     res.render("add");
 });
@@ -119,7 +122,7 @@ app.post("/admin/add", adminAuth, async(req, res) => {
             cast: req.body.cast.split(","),
             genre: req.body.genre.split(","),
             quality: req.body.quality.split(","),
-            screenshots: req.body.screenshots.split(",")
+            screenshots: req.body.screenshots.split(","),
         };
         await Movie.create(movieData);
         res.redirect("/");
@@ -128,7 +131,7 @@ app.post("/admin/add", adminAuth, async(req, res) => {
     }
 });
 
-// Admin: Edit Movie
+// ✅ Admin Edit Movie
 app.get("/admin/edit/:id", adminAuth, async(req, res) => {
     const movie = await Movie.findById(req.params.id);
     if (!movie) return res.status(404).send("Movie not found");
@@ -142,7 +145,7 @@ app.post("/admin/edit/:id", adminAuth, async(req, res) => {
             cast: req.body.cast.split(","),
             genre: req.body.genre.split(","),
             quality: req.body.quality.split(","),
-            screenshots: req.body.screenshots.split(",")
+            screenshots: req.body.screenshots.split(","),
         };
         await Movie.findByIdAndUpdate(req.params.id, updatedData);
         res.redirect("/");
@@ -151,13 +154,13 @@ app.post("/admin/edit/:id", adminAuth, async(req, res) => {
     }
 });
 
-// Admin: Delete Movie
+// ✅ Admin Delete Movie
 app.get("/admin/delete/:id", adminAuth, async(req, res) => {
     await Movie.findByIdAndDelete(req.params.id);
     res.redirect("/");
 });
 
-// Static pages
+// ✅ Static Pages
 app.get("/about-us", (req, res) => {
     res.render("about");
 });
@@ -166,7 +169,7 @@ app.get("/privacy-policy", (req, res) => {
     res.render("privacy");
 });
 
-// Start Server
+// ✅ Start Server
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
