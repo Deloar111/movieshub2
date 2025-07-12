@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.use(adminAuth); // ✅ this adds isAdmin to all templates
 
 // MongoDB Connection
-mongoose.connect("mongodb://localhost:27017/movieshub")
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/movieshub")
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.error("❌ MongoDB Error:", err));
 
