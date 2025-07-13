@@ -17,17 +17,24 @@
             <% } else { %>
                 <form action="/admin/add?admin=8892" method="POST" class="grid gap-4">
                     <input type="text" name="title" placeholder="Title" required class="p-3 rounded bg-gray-700" />
-
                     <textarea name="description" placeholder="Description" rows="4" class="p-3 rounded bg-gray-700"></textarea>
-
                     <input type="text" name="cast" placeholder="Cast (comma-separated)" class="p-3 rounded bg-gray-700" />
                     <input type="text" name="genre" placeholder="Genre (comma-separated)" class="p-3 rounded bg-gray-700" />
                     <input type="text" name="movieLanguage" placeholder="Language" class="p-3 rounded bg-gray-700" />
                     <input type="text" name="quality" placeholder="Quality (comma-separated)" class="p-3 rounded bg-gray-700" />
-
                     <input type="url" name="poster" placeholder="Poster URL" class="p-3 rounded bg-gray-700" />
-                    <input type="text" name="screenshots" placeholder="Screenshot URLs (comma-separated)" class="p-3 rounded bg-gray-700" />
 
+                    <!-- Screenshot inputs (minimum 3 required) -->
+                    <div>
+                        <label class="block mb-2 font-semibold text-green-400">Screenshots (Minimum 3 Required)</label>
+                        <input type="text" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 1">
+                        <input type="text" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 2">
+                        <input type="text" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 3">
+                        <input type="text" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 4 (Optional)">
+                        <input type="text" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 5 (Optional)">
+                    </div>
+
+                    <!-- Quality links -->
                     <input type="url" name="qualityLinks[480p]" placeholder="480p Link" class="p-3 rounded bg-gray-700" />
                     <input type="url" name="qualityLinks[720p]" placeholder="720p Link" class="p-3 rounded bg-gray-700" />
                     <input type="url" name="qualityLinks[1080p]" placeholder="1080p Link" class="p-3 rounded bg-gray-700" />
@@ -37,6 +44,19 @@
                     ➕ Add Movie
                 </button>
                 </form>
+
+                <!-- ✅ JavaScript validation for minimum 3 screenshots -->
+                <script>
+                    document.querySelector("form").addEventListener("submit", function(e) {
+                        const screenshotInputs = document.querySelectorAll("input[name='screenshots']");
+                        const validScreenshots = Array.from(screenshotInputs).filter(input => input.value.trim() !== "");
+
+                        if (validScreenshots.length < 3) {
+                            alert("❌ Please enter at least 3 screenshots.");
+                            e.preventDefault(); // Stop form submission
+                        }
+                    });
+                </script>
                 <% } %>
     </div>
 </body>

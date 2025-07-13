@@ -120,26 +120,41 @@ app.get("/admin/add", (req, res) => {
     if (!res.locals.isAdmin) return res.redirect("/");
     res.render("add", { adminQuery: req.query.admin });
 });
-
 // Add Movie Handler
 app.post("/admin/add", async(req, res) => {
     if (!res.locals.isAdmin) return res.redirect("/");
 
     try {
+        const { screenshots } = req.body;
+
+        // ✅ Make sure screenshots is always an array and at least 3 are filled
+        const validScreenshots = Array.isArray(screenshots) ?
+            screenshots.filter((s) => s.trim() !== "") :
+            screenshots ?
+            [screenshots.trim()] :
+            [];
+
+        if (validScreenshots.length < 3) {
+            return res.status(400).send("❌ Please enter at least 3 screenshots.");
+        }
+
         const movieData = {
             ...req.body,
-            cast: req.body.cast.split(",").map((s) => s.trim()),
-            genre: req.body.genre.split(",").map((s) => s.trim()),
-            quality: req.body.quality.split(",").map((s) => s.trim()),
-            screenshots: req.body.screenshots.split(",").map((s) => s.trim()),
+            cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
+            genre: req.body.genre ? req.body.genre.split(",").map((s) => s.trim()) : [],
+            quality: req.body.quality ? req.body.quality.split(",").map((s) => s.trim()) : [],
+            screenshots: validScreenshots,
             qualityLinks: req.body.qualityLinks,
         };
+
         await Movie.create(movieData);
-        res.redirect("/?admin=8892"); // ✅ Preserve admin
+        res.redirect("/?admin=8892");
     } catch (err) {
+        console.error("❌ Failed to add movie:", err.message);
         res.status(500).send("Failed to add movie");
     }
 });
+
 
 // Edit Movie Form
 app.get("/admin/edit/:id", async(req, res) => {
