@@ -5,6 +5,9 @@ import path from "path";
 import Movie from "./models/movies.js";
 import adminAuth from "./middleware/adminAuth.js";
 import bodyParser from "body-parser";
+import lodash from "lodash";
+const { escapeRegExp } = lodash;
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,37 +19,69 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(adminAuth); // Adds res.locals.isAdmin
+app.use(adminAuth); // Sets res.locals.isAdmin
 
 // MongoDB Connection
 mongoose.connect(
-        process.env.MONGO_URL ||
-        "mongodb+srv://deloarhossen:8PwxJE5xWkALIPK@watchview.x1xjpmm.mongodb.net/watchview?retryWrites=true&w=majority&appName=watchview"
-    )
-    .then(() => console.log("✅ MongoDB Connected"))
-    .catch((err) => console.error("❌ MongoDB Error:", err));
+    process.env.MONGO_URL ||
+    "mongodb+srv://deloarhossen:8PwxJE5xWkALIPK@watchview.x1xjpmm.mongodb.net/watchview?retryWrites=true&w=majority&appName=watchview"
+).then(() => {
+    console.log("✅ MongoDB Connected");
+}).catch((err) => {
+    console.error("❌ MongoDB Error:", err);
+});
 
-// Homepage
+// Homepage with smart search
 app.get("/", async(req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
-        const searchQuery = req.query.search || "";
+        const limit = 21;
+        const searchQuery = (req.query.search || "").trim();
         const category = req.query.category;
 
-        const query = {
-            ...(searchQuery && { title: { $regex: searchQuery, $options: "i" } }),
-            ...(category && category !== "All Movies" && {
-                genre: { $regex: category, $options: "i" },
-            }),
-        };
+        let movies = [];
+        let totalMovies = 0;
 
-        const movies = await Movie.find(query)
-            .skip((page - 1) * limit)
-            .limit(limit);
-        const totalMovies = await Movie.countDocuments(query);
+        if (searchQuery) {
+            const escapedSearch = escapeRegExp(searchQuery);
+
+            const startsWithMatches = await Movie.find({
+                title: { $regex: "^" + escapedSearch, $options: "i" },
+                ...(category && category !== "All Movies" && {
+                    genre: { $regex: category, $options: "i" }
+                })
+            });
+
+            const containsMatches = await Movie.find({
+                title: { $regex: escapedSearch, $options: "i" },
+                _id: { $nin: startsWithMatches.map(m => m._id) },
+                ...(category && category !== "All Movies" && {
+                    genre: { $regex: category, $options: "i" }
+                })
+            });
+
+            const combinedResults = [...startsWithMatches, ...containsMatches];
+            totalMovies = combinedResults.length;
+            movies = combinedResults.slice((page - 1) * limit, page * limit);
+        } else {
+            const query = {};
+            if (category && category !== "All Movies") {
+                query.genre = { $regex: category, $options: "i" };
+            }
+
+            totalMovies = await Movie.countDocuments(query);
+            movies = await Movie.find(query)
+                .sort({ title: 1 })
+                .skip((page - 1) * limit)
+                .limit(limit);
+        }
+
         const totalPages = Math.ceil(totalMovies / limit);
-        const trendingMovies = await Movie.find().sort({ createdAt: -1 }).limit(4);
+
+        let trendingMovies = [];
+        if (!searchQuery && !category) {
+            trendingMovies = await Movie.find().sort({ createdAt: -1 }).limit(4);
+        }
 
         res.render("home", {
             movies,
@@ -54,8 +89,12 @@ app.get("/", async(req, res) => {
             currentPage: page,
             totalPages,
             searchQuery,
+            category,
+            isAdmin: res.locals.isAdmin
         });
+
     } catch (err) {
+        console.error("❌ Error loading homepage:", err);
         res.status(500).send("Error loading homepage");
     }
 });
@@ -73,17 +112,18 @@ app.get("/seed", async(req, res) => {
         screenshots: [
             "https://i.imgur.com/3Q1JJoE.jpg",
             "https://i.imgur.com/uXjlzJq.jpg",
+            "https://i.imgur.com/a1z9HkR.jpg"
         ],
         qualityLinks: {
             "480p": "https://drive.google.com/480plink",
             "720p": "https://drive.google.com/720plink",
             "1080p": "https://drive.google.com/1080plink",
-        },
+        }
     });
     res.send("✅ Dummy movie added!");
 });
 
-// Details Page
+// Movie Details Page
 app.get("/movies/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -93,8 +133,8 @@ app.get("/movies/:id", async(req, res) => {
             _id: { $ne: movie._id },
             $or: [
                 { genre: { $in: movie.genre } },
-                { movieLanguage: movie.movieLanguage },
-            ],
+                { movieLanguage: movie.movieLanguage }
+            ]
         }).limit(6);
 
         res.render("details", { movie, suggestions });
@@ -114,25 +154,21 @@ app.get("/download/:id", async(req, res) => {
     }
 });
 
-// Admin Routes
 // Add Movie Form
 app.get("/admin/add", (req, res) => {
     if (!res.locals.isAdmin) return res.redirect("/");
     res.render("add", { adminQuery: req.query.admin });
 });
+
 // Add Movie Handler
 app.post("/admin/add", async(req, res) => {
     if (!res.locals.isAdmin) return res.redirect("/");
 
     try {
         const { screenshots } = req.body;
-
-        // ✅ Make sure screenshots is always an array and at least 3 are filled
         const validScreenshots = Array.isArray(screenshots) ?
             screenshots.filter((s) => s.trim() !== "") :
-            screenshots ?
-            [screenshots.trim()] :
-            [];
+            screenshots ? [screenshots.trim()] : [];
 
         if (validScreenshots.length < 3) {
             return res.status(400).send("❌ Please enter at least 3 screenshots.");
@@ -144,7 +180,7 @@ app.post("/admin/add", async(req, res) => {
             genre: req.body.genre ? req.body.genre.split(",").map((s) => s.trim()) : [],
             quality: req.body.quality ? req.body.quality.split(",").map((s) => s.trim()) : [],
             screenshots: validScreenshots,
-            qualityLinks: req.body.qualityLinks,
+            qualityLinks: req.body.qualityLinks
         };
 
         await Movie.create(movieData);
@@ -154,7 +190,6 @@ app.post("/admin/add", async(req, res) => {
         res.status(500).send("Failed to add movie");
     }
 });
-
 
 // Edit Movie Form
 app.get("/admin/edit/:id", async(req, res) => {
@@ -175,11 +210,11 @@ app.post("/admin/edit/:id", async(req, res) => {
             genre: req.body.genre.split(",").map((s) => s.trim()),
             quality: req.body.quality.split(",").map((s) => s.trim()),
             screenshots: req.body.screenshots.split(",").map((s) => s.trim()),
-            qualityLinks: req.body.qualityLinks,
+            qualityLinks: req.body.qualityLinks
         };
 
         await Movie.findByIdAndUpdate(req.params.id, updatedData);
-        res.redirect("/?admin=8892"); // ✅ Keep admin flag
+        res.redirect("/?admin=8892");
     } catch (err) {
         res.status(500).send("Failed to update movie");
     }
@@ -189,7 +224,7 @@ app.post("/admin/edit/:id", async(req, res) => {
 app.get("/admin/delete/:id", async(req, res) => {
     if (!res.locals.isAdmin) return res.redirect("/");
     await Movie.findByIdAndDelete(req.params.id);
-    res.redirect("/?admin=8892"); // ✅ Keep admin flag
+    res.redirect("/?admin=8892");
 });
 
 // Static Pages
