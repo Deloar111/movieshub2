@@ -32,10 +32,11 @@ mongoose.connect(
 });
 
 // Homepage with smart search
+
 app.get("/", async(req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 21;
+        const limit = 14;
         const searchQuery = (req.query.search || "").trim();
         const category = req.query.category;
 
@@ -45,6 +46,7 @@ app.get("/", async(req, res) => {
         if (searchQuery) {
             const escapedSearch = escapeRegExp(searchQuery);
 
+            // Matches where title starts with search text
             const startsWithMatches = await Movie.find({
                 title: { $regex: "^" + escapedSearch, $options: "i" },
                 ...(category && category !== "All Movies" && {
@@ -52,6 +54,7 @@ app.get("/", async(req, res) => {
                 })
             });
 
+            // Matches where title contains search text but doesn't start with it
             const containsMatches = await Movie.find({
                 title: { $regex: escapedSearch, $options: "i" },
                 _id: { $nin: startsWithMatches.map(m => m._id) },
@@ -60,10 +63,13 @@ app.get("/", async(req, res) => {
                 })
             });
 
+            // Combine and paginate manually
             const combinedResults = [...startsWithMatches, ...containsMatches];
             totalMovies = combinedResults.length;
             movies = combinedResults.slice((page - 1) * limit, page * limit);
+
         } else {
+            // No search
             const query = {};
             if (category && category !== "All Movies") {
                 query.genre = { $regex: category, $options: "i" };
@@ -71,13 +77,14 @@ app.get("/", async(req, res) => {
 
             totalMovies = await Movie.countDocuments(query);
             movies = await Movie.find(query)
-                .sort({ title: 1 })
+                .sort({ title: 1 }) // Alphabetical order
                 .skip((page - 1) * limit)
                 .limit(limit);
         }
 
         const totalPages = Math.ceil(totalMovies / limit);
 
+        // Show trending only on default homepage (no search or filter)
         let trendingMovies = [];
         if (!searchQuery && !category) {
             trendingMovies = await Movie.find().sort({ createdAt: -1 }).limit(4);
@@ -98,6 +105,7 @@ app.get("/", async(req, res) => {
         res.status(500).send("Error loading homepage");
     }
 });
+
 
 // Dummy Seeder
 app.get("/seed", async(req, res) => {
