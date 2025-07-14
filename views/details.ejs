@@ -43,20 +43,38 @@
             </div>
         </div>
 
-        <!-- Similar Movies -->
-        <div class="mt-10">
-            <h2 class="text-xl font-bold text-yellow-400 mb-4">🎬 Similar Movies</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <% suggestions.forEach(similar => { %>
+        <!-- 📸 Movie Screenshots -->
+        <!-- 📸 Screenshots (Compact, Responsive) -->
+        <% if (movie.screenshots && movie.screenshots.length > 0) { %>
+            <section class="max-w-6xl mx-auto mt-10 px-4">
+                <h2 class="text-xl md:text-2xl font-bold text-pink-400 mb-4 border-b border-gray-600 pb-1 flex items-center gap-2">
+                    <span>📸</span> Screenshots
+                </h2>
 
-                    <a href="/movies/<%= similar._id %>" class="bg-gray-800 p-2 rounded hover:shadow-lg transition">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <% movie.screenshots.forEach((screenshot, index) => { %>
+                        <div class="overflow-hidden rounded-xl border border-gray-700 shadow-md bg-black">
+                            <img src="<%= screenshot %>" alt="Screenshot <%= index + 1 %>" class="w-full h-auto object-contain max-h-64" />
+                        </div>
+                        <% }) %>
+                </div>
+            </section>
+            <% } %>
+
+                <!-- Similar Movies -->
+                <div class="mt-10">
+                    <h2 class="text-xl font-bold text-yellow-400 mb-4">🎬 Similar Movies</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <% suggestions.forEach(similar => { %>
+
+                            <a href="/movies/<%= similar._id %>" class="bg-gray-800 p-2 rounded hover:shadow-lg transition">
         <img src="<%= similar.poster %>" class="w-full h-32 object-cover rounded mb-2">
         <h3 class="text-sm font-semibold"><%= similar.title %></h3>
         <p class="text-xs text-gray-400"><%= similar.movieLanguage %></p>
       </a>
-                    <% }) %>
-            </div>
-        </div>
+                            <% }) %>
+                    </div>
+                </div>
 
     </div>
 </body>

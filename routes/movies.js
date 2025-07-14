@@ -7,14 +7,11 @@ const router = express.Router();
 // ============================
 // 🔐 Admin-Only: Add Movie
 // ============================
-
-app.post("/admin/add", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
+router.post("/admin/add", adminAuth, async(req, res) => {
     try {
         const { screenshots } = req.body;
 
-        // ✅ Ensure screenshots is always an array
+        // ✅ Ensure screenshots is always an array with at least 3 items
         const validScreenshots = Array.isArray(screenshots) ?
             screenshots.filter((s) => s.trim() !== "") :
             screenshots ?
@@ -31,16 +28,16 @@ app.post("/admin/add", async(req, res) => {
             genre: req.body.genre ? req.body.genre.split(",").map((s) => s.trim()) : [],
             quality: req.body.quality ? req.body.quality.split(",").map((s) => s.trim()) : [],
             screenshots: validScreenshots,
+            qualityLinks: req.body.qualityLinks || {},
         };
 
         await Movie.create(movieData);
-        res.redirect("/?admin=8892"); // ✅ Keep admin flag
+        res.redirect("/?admin=8892");
     } catch (err) {
         console.error("❌ Error adding movie:", err.message);
         res.status(500).send("❌ Failed to add movie");
     }
 });
-
 
 // ============================
 // 🎬 Movie Details + Suggestions
@@ -48,10 +45,7 @@ app.post("/admin/add", async(req, res) => {
 router.get("/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
-
-        if (!movie) {
-            return res.status(404).send("Movie not found");
-        }
+        if (!movie) return res.status(404).send("Movie not found");
 
         const similarMovies = await Movie.find({
             _id: { $ne: movie._id },
@@ -72,16 +66,12 @@ router.get("/:id", async(req, res) => {
 });
 
 // ============================
-// ⬇️ Download Page (15-sec delay logic done in view)
+// ⬇️ Download Page
 // ============================
 router.get("/download/:id", async(req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
-
-        if (!movie) {
-            return res.status(404).send("Movie not found");
-        }
-
+        if (!movie) return res.status(404).send("Movie not found");
         res.render("download", { movie });
     } catch (err) {
         console.error("Error loading download page:", err);
@@ -112,9 +102,11 @@ router.post("/admin/edit/:id", adminAuth, async(req, res) => {
             genre: req.body.genre ? req.body.genre.split(",").map(s => s.trim()) : [],
             quality: req.body.quality ? req.body.quality.split(",").map(s => s.trim()) : [],
             screenshots: Array.isArray(req.body.screenshots) ?
-                req.body.screenshots.filter(s => s.trim()) : req.body.screenshots ? [req.body.screenshots] : [],
+                req.body.screenshots.filter(s => s.trim()) :
+                req.body.screenshots ?
+                [req.body.screenshots.trim()] :
+                [],
         };
-
 
         await Movie.findByIdAndUpdate(req.params.id, updatedData);
         res.redirect("/?admin=8892");
@@ -137,5 +129,4 @@ router.get("/admin/delete/:id", adminAuth, async(req, res) => {
     }
 });
 
-// ✅ Export the router
 export default router;
