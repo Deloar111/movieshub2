@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Error
+        <%= statusCode %>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 40px;
+            text-align: center;
+            background: #fff3f3;
+            color: #333;
+        }
+        
+        h1 {
+            color: #e74c3c;
+            font-size: 2rem;
+        }
+        
+        p {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Error
+        <%= statusCode %>
+    </h1>
+    <p>
+        <%= message %>
+    </p>
+    <a href="/">🏠 Go Home</a>
+</body>
+
+</html>

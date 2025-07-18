@@ -3,12 +3,15 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Preparing Your Download</title>
+    <title>Preparing Your Download -
+        <%= movie.title %>
+    </title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
         }
         
         .glass {
@@ -17,71 +20,327 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
+        .progress-ring {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .download-btn {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .bounce {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%,
+            20%,
+            53%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+            40%,
+            43% {
+                transform: translateY(-10px);
+            }
+            70% {
+                transform: translateY(-5px);
+            }
+            90% {
+                transform: translateY(-2px);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .movie-info {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        }
     </style>
 </head>
 
-<body class="text-white h-screen flex items-center justify-center">
-
-    <div class="glass rounded-xl p-8 w-full max-w-md text-center shadow-lg">
-        <h1 class="text-2xl font-extrabold text-red-400 mb-4">🎬 Your Download is Almost Ready</h1>
-        <p class="text-lg mb-4">Please wait <span id="timer" class="text-yellow-400 font-bold">15</span> seconds...</p>
-
-        <!-- Progress Circle -->
-        <div class="w-20 h-20 mx-auto mb-6 relative">
-            <svg class="absolute top-0 left-0" width="80" height="80">
-        <circle id="progressCircle" cx="40" cy="40" r="35" stroke="#f87171" stroke-width="5" fill="none" stroke-dasharray="220" stroke-dashoffset="0" />
- </svg>
+<body class="text-white flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl">
+        <!-- Movie Info Section -->
+        <div class="glass movie-info rounded-2xl p-6 mb-6 text-center">
+            <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                <img src="<%= movie.poster %>" alt="<%= movie.title %>" class="w-20 h-28 object-cover rounded-lg shadow-lg">
+                <div class="text-left">
+                    <h2 class="text-2xl font-bold text-white mb-2">
+                        <%= movie.title %>
+                    </h2>
+                    <p class="text-gray-300 text-sm">
+                        <span class="inline-block bg-red-500 px-2 py-1 rounded text-xs font-semibold mr-2">
+                            <%= movie.movieLanguage %>
+                        </span>
+                        <% if (movie.genre && movie.genre.length > 0) { %>
+                            <% movie.genre.slice(0, 2).forEach(g => { %>
+                                <span class="inline-block bg-blue-500 px-2 py-1 rounded text-xs font-semibold mr-1">
+                                    <%= g %>
+                                </span>
+                                <% }); %>
+                                    <% } %>
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <!-- Hidden download buttons -->
-        <div id="downloadLinks" class="hidden mt-6 space-y-3">
-            <% if (movie.qualityLinks["480p"]) { %>
-                <a href="<%= movie.qualityLinks['480p'] %>" target="_blank" class="block w-full text-center bg-blue-600 hover:bg-blue-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
-      🔽 Download 480p
-    </a>
-                <% } %>
+        <!-- Main Download Section -->
+        <div class="glass rounded-2xl p-8 text-center shadow-2xl">
+            <!-- Loading State -->
+            <div id="loadingState">
+                <div class="bounce mb-4">
+                    <div class="text-6xl">🎬</div>
+                </div>
+                <h1 class="text-3xl font-extrabold text-red-400 mb-4">
+                    Your Download is Almost Ready!
+                </h1>
+                <p class="text-lg mb-6 text-gray-300">
+                    Please wait <span id="timer" class="text-yellow-400 font-bold text-2xl">15</span> seconds...
+                </p>
 
-                    <% if (movie.qualityLinks["720p"]) { %>
-                        <a href="<%= movie.qualityLinks['720p'] %>" target="_blank" class="block w-full text-center bg-green-600 hover:bg-green-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
-      🔽 Download 720p
-    </a>
+                <!-- Progress Circle -->
+                <div class="w-32 h-32 mx-auto mb-6 relative">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <!-- Background circle -->
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            stroke="rgba(255, 255, 255, 0.1)"
+                            stroke-width="8"
+                            fill="none"
+                        />
+                        <!-- Progress circle -->
+                        <circle
+                            id="progressCircle"
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            stroke="#f87171"
+                            stroke-width="8"
+                            fill="none"
+                            stroke-dasharray="283"
+                            stroke-dashoffset="0"
+                            class="progress-ring"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <!-- Timer in center -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="circleTimer" class="text-2xl font-bold text-white">15</span>
+                    </div>
+                </div>
+
+                <!-- Loading Messages -->
+                <div id="loadingMessages" class="space-y-2 mb-4">
+                    <p class="text-gray-400 text-sm pulse">🔄 Preparing your download...</p>
+                </div>
+            </div>
+
+            <!-- Download Links (Hidden initially) -->
+            <div id="downloadLinks" class="hidden fade-in">
+                <div class="text-6xl mb-4">✅</div>
+                <h1 class="text-3xl font-extrabold text-green-400 mb-4">
+                    Download Ready!
+                </h1>
+                <p class="text-lg mb-6 text-gray-300">
+                    Choose your preferred quality:
+                </p>
+
+                <div class="space-y-4 max-w-md mx-auto">
+                    <% if (movie.qualityLinks && movie.qualityLinks["480p"]) { %>
+                        <a href="<%= movie.qualityLinks['480p'] %>" target="_blank" class="download-btn flex items-center justify-between w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">📱</span>
+                                <div class="text-left">
+                                    <div class="text-lg font-bold">480p Quality</div>
+                                    <div class="text-sm opacity-90">~300-500 MB</div>
+                                </div>
+                            </div>
+                            <div class="text-2xl">⬇️</div>
+                        </a>
                         <% } %>
 
-                            <% if (movie.qualityLinks["1080p"]) { %>
-                                <a href="<%= movie.qualityLinks['1080p'] %>" target="_blank" class="block w-full text-center bg-purple-600 hover:bg-purple-700 transition duration-200 text-white py-2 rounded-lg font-semibold shadow-md">
-      🔽 Download 1080p
-    </a>
+                            <% if (movie.qualityLinks && movie.qualityLinks["720p"]) { %>
+                                <a href="<%= movie.qualityLinks['720p'] %>" target="_blank" class="download-btn flex items-center justify-between w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg">
+                                    <div class="flex items-center">
+                                        <span class="text-2xl mr-3">💻</span>
+                                        <div class="text-left">
+                                            <div class="text-lg font-bold">720p Quality</div>
+                                            <div class="text-sm opacity-90">~700-1 GB</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">⬇️</div>
+                                </a>
                                 <% } %>
+
+                                    <% if (movie.qualityLinks && movie.qualityLinks["1080p"]) { %>
+                                        <a href="<%= movie.qualityLinks['1080p'] %>" target="_blank" class="download-btn flex items-center justify-between w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg">
+                                            <div class="flex items-center">
+                                                <span class="text-2xl mr-3">🖥️</span>
+                                                <div class="text-left">
+                                                    <div class="text-lg font-bold">1080p Quality</div>
+                                                    <div class="text-sm opacity-90">~1.5-2.5 GB</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-2xl">⬇️</div>
+                                        </a>
+                                        <% } %>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="mt-8 p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl border border-yellow-500/30">
+                    <h3 class="text-lg font-semibold text-yellow-400 mb-2">📋 Download Instructions</h3>
+                    <ul class="text-sm text-gray-300 space-y-1 text-left max-w-md mx-auto">
+                        <li>• Click on your preferred quality to start download</li>
+                        <li>• Higher quality = Better video but larger file size</li>
+                        <li>• Make sure you have enough storage space</li>
+                        <li>• Download may take time depending on your internet speed</li>
+                    </ul>
+                </div>
+
+                <!-- Back to Movie Button -->
+                <div class="mt-6">
+                    <a href="/movies/<%= movie._id %>" class="inline-flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200">
+                        <span class="mr-2">←</span> Back to Movie Details
+                    </a>
+                </div>
+            </div>
         </div>
 
-
-
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-400 text-sm">
+            <p>© 2024 MovieHub. Safe & Fast Downloads</p>
+        </div>
     </div>
 
     <script>
         let seconds = 15;
         const timer = document.getElementById("timer");
+        const circleTimer = document.getElementById("circleTimer");
+        const loadingState = document.getElementById("loadingState");
         const downloadLinks = document.getElementById("downloadLinks");
         const progressCircle = document.getElementById("progressCircle");
+        const loadingMessages = document.getElementById("loadingMessages");
 
-        const totalDash = 220;
+        const totalDash = 283; // Circumference of the circle
+        const messages = [
+            "🔄 Preparing your download...",
+            "🔍 Checking file availability...",
+            "🚀 Optimizing download speed...",
+            "📁 Verifying file integrity...",
+            "⚡ Almost ready..."
+        ];
 
+        let messageIndex = 0;
+
+        // Update loading messages
+        const messageInterval = setInterval(() => {
+            if (seconds > 0) {
+                loadingMessages.innerHTML = `<p class="text-gray-400 text-sm pulse">${messages[messageIndex]}</p>`;
+                messageIndex = (messageIndex + 1) % messages.length;
+            }
+        }, 3000);
+
+        // Countdown timer
         const countdown = setInterval(() => {
             seconds--;
             timer.textContent = seconds;
+            circleTimer.textContent = seconds;
 
+            // Update progress circle
             const dashOffset = totalDash * (seconds / 15);
             progressCircle.setAttribute("stroke-dashoffset", dashOffset);
 
+            // Change circle color as time runs out
+            if (seconds <= 5) {
+                progressCircle.setAttribute("stroke", "#10b981"); // Green
+            } else if (seconds <= 10) {
+                progressCircle.setAttribute("stroke", "#f59e0b"); // Yellow
+            }
+
             if (seconds <= 0) {
                 clearInterval(countdown);
+                clearInterval(messageInterval);
+
+                // Hide loading state and show download links
+                loadingState.style.display = "none";
                 downloadLinks.classList.remove("hidden");
-                timer.parentElement.style.display = "none";
+
+                // Reset progress circle
                 progressCircle.setAttribute("stroke-dashoffset", 0);
+                progressCircle.setAttribute("stroke", "#10b981");
             }
         }, 1000);
-    </script>
 
+        // Add click sound effect (optional)
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // You can add a sound effect here if needed
+                console.log('Download started!');
+            });
+        });
+
+        // Prevent page refresh/back during countdown
+        let countdownActive = true;
+        setTimeout(() => {
+            countdownActive = false;
+        }, 15000);
+
+        window.addEventListener('beforeunload', (e) => {
+            if (countdownActive) {
+                e.preventDefault();
+                e.returnValue = 'Download is preparing. Are you sure you want to leave?';
+            }
+        });
+
+        // Add some visual feedback
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease';
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
 </body>
 
 </html>

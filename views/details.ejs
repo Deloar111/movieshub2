@@ -3,80 +3,314 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <%= movie.title %> - WatchView</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <%= movie.title %> - Movie Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .poster-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+        
+        .quality-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .download-btn {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .movie-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .genre-tag {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+        }
+        
+        .cast-tag {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 2px 10px rgba(78, 205, 196, 0.3);
+        }
+        
+        .language-tag {
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+            color: #2d3436;
+            box-shadow: 0 2px 10px rgba(255, 234, 167, 0.3);
+        }
+        
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-900 text-white font-sans">
-    <div class="max-w-5xl mx-auto p-4">
-        <a href="/" class="text-blue-400 underline">← Back to Home</a>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 bg-gray-800 p-4 rounded-xl shadow-lg">
-            <img src="<%= movie.poster %>" alt="<%= movie.title %>" class="rounded-xl w-full h-auto" />
-
-            <div>
-                <h1 class="text-3xl font-bold mb-2">
-                    <%= movie.title %>
-                </h1>
-                <p class="text-sm text-gray-400 mb-2">
-                    <%= movie.description %>
-                </p>
-
-                <p><strong>Cast:</strong>
-                    <%= movie.cast.join(", ") %>
-                </p>
-                <p><strong>Genre:</strong>
-                    <%= movie.genre.join(", ") %>
-                </p>
-                <p><strong>Language:</strong>
-                    <%= movie.movieLanguage %>
-                </p>
-                <p><strong>Qualities:</strong>
-                    <%= movie.quality.join(", ") %>
-                </p>
-
-                <a href="/download/<%= movie._id %>" class="mt-4 inline-block bg-blue-500 px-4 py-2 rounded hover:bg-blue-600">
-                    ⬇️ Download Now
-                </a>
+<body class="text-white scroll-smooth">
+    <!-- Header Navigation -->
+    <nav class="glass fixed top-0 w-full z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="/" class="text-2xl font-bold text-red-400 hover:text-red-300 transition">
+                🎬 MovieHub
+            </a>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-red-400 transition">Home</a>
+                <a href="/movies" class="hover:text-red-400 transition">Movies</a>
+                <a href="/search" class="hover:text-red-400 transition">Search</a>
             </div>
         </div>
+    </nav>
 
-        <!-- 📸 Movie Screenshots -->
-        <!-- 📸 Screenshots (Compact, Responsive) -->
-        <% if (movie.screenshots && movie.screenshots.length > 0) { %>
-            <section class="max-w-6xl mx-auto mt-10 px-4">
-                <h2 class="text-xl md:text-2xl font-bold text-pink-400 mb-4 border-b border-gray-600 pb-1 flex items-center gap-2">
-                    <span>📸</span> Screenshots
-                </h2>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <% movie.screenshots.forEach((screenshot, index) => { %>
-                        <div class="overflow-hidden rounded-xl border border-gray-700 shadow-md bg-black">
-                            <img src="<%= screenshot %>" alt="Screenshot <%= index + 1 %>" class="w-full h-auto object-contain max-h-64" />
+    <!-- Main Content -->
+    <div class="pt-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Movie Header Section -->
+            <div class="glass rounded-2xl p-6 sm:p-8 mb-8 overflow-hidden">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Movie Poster -->
+                    <div class="flex-shrink-0 mx-auto lg:mx-0">
+                        <div class="relative">
+                            <img src="<%= movie.poster %>" alt="<%= movie.title %> Poster" class="w-80 h-auto rounded-xl poster-shadow object-cover" loading="lazy">
+                            <div class="absolute top-4 right-4 quality-badge rounded-full px-3 py-1 text-sm font-semibold">
+                                HD
+                            </div>
                         </div>
-                        <% }) %>
-                </div>
-            </section>
-            <% } %>
+                    </div>
 
-                <!-- Similar Movies -->
-                <div class="mt-10">
-                    <h2 class="text-xl font-bold text-yellow-400 mb-4">🎬 Similar Movies</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <% suggestions.forEach(similar => { %>
+                    <!-- Movie Details -->
+                    <div class="flex-1 space-y-6">
+                        <!-- Title -->
+                        <div>
+                            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-2">
+                                <%= movie.title %>
+                            </h1>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="language-tag px-3 py-1 rounded-full text-sm font-semibold">
+                                    <%= movie.movieLanguage %>
+                                </span>
+                                <% if (movie.quality && movie.quality.length > 0) { %>
+                                    <% movie.quality.forEach(q => { %>
+                                        <span class="quality-badge px-3 py-1 rounded-full text-sm font-semibold">
+                                            <%= q %>
+                                        </span>
+                                        <% }); %>
+                                            <% } %>
+                            </div>
+                        </div>
 
-                            <a href="/movies/<%= similar._id %>" class="bg-gray-800 p-2 rounded hover:shadow-lg transition">
-        <img src="<%= similar.poster %>" class="w-full h-32 object-cover rounded mb-2">
-        <h3 class="text-sm font-semibold"><%= similar.title %></h3>
-        <p class="text-xs text-gray-400"><%= similar.movieLanguage %></p>
-      </a>
-                            <% }) %>
+                        <!-- Description -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3 text-red-400">📖 Description</h3>
+                            <p class="text-gray-300 leading-relaxed text-lg">
+                                <%= movie.description %>
+                            </p>
+                        </div>
+
+                        <!-- Cast -->
+                        <% if (movie.cast && movie.cast.length > 0) { %>
+                            <div>
+                                <h3 class="text-xl font-semibold mb-3 text-red-400">⭐ Cast</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <% movie.cast.forEach(actor => { %>
+                                        <span class="cast-tag px-3 py-1 rounded-full text-sm font-semibold">
+                                            <%= actor %>
+                                        </span>
+                                        <% }); %>
+                                </div>
+                            </div>
+                            <% } %>
+
+                                <!-- Genres -->
+                                <% if (movie.genre && movie.genre.length > 0) { %>
+                                    <div>
+                                        <h3 class="text-xl font-semibold mb-3 text-red-400">🎭 Genres</h3>
+                                        <div class="flex flex-wrap gap-2">
+                                            <% movie.genre.forEach(g => { %>
+                                                <span class="genre-tag px-3 py-1 rounded-full text-sm font-semibold">
+                                            <%= g %>
+                                        </span>
+                                                <% }); %>
+                                        </div>
+                                    </div>
+                                    <% } %>
                     </div>
                 </div>
+            </div>
 
+            <!-- Download Section -->
+            <div class="glass rounded-2xl p-6 sm:p-8 mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 text-red-400">
+                    🔽 Download Links
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                    <% if (movie.qualityLinks && movie.qualityLinks['480p']) { %>
+                        <a href="/movies/download/<%= movie._id %>?quality=480p" class="download-btn bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl text-center block">
+                            <div class="text-lg mb-1">📱 480p</div>
+                            <div class="text-sm opacity-90">~300-500 MB</div>
+                        </a>
+                        <% } %>
+
+                            <% if (movie.qualityLinks && movie.qualityLinks['720p']) { %>
+                                <a href="/movies/download/<%= movie._id %>?quality=720p" class="download-btn bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl text-center block">
+                                    <div class="text-lg mb-1">💻 720p</div>
+                                    <div class="text-sm opacity-90">~700-1 GB</div>
+                                </a>
+                                <% } %>
+
+                                    <% if (movie.qualityLinks && movie.qualityLinks['1080p']) { %>
+                                        <a href="/movies/download/<%= movie._id %>?quality=1080p" class="download-btn bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl text-center block">
+                                            <div class="text-lg mb-1">🖥️ 1080p</div>
+                                            <div class="text-sm opacity-90">~1.5-2.5 GB</div>
+                                        </a>
+                                        <% } %>
+                </div>
+
+                <div class="text-center mt-6">
+                    <p class="text-gray-400 text-sm">
+                        💡 Higher quality = Better video but larger file size
+                    </p>
+                </div>
+            </div>
+
+            <!-- Screenshots Section -->
+            <% if (movie.screenshots && movie.screenshots.length > 0) { %>
+                <div class="glass rounded-2xl p-6 sm:p-8 mb-8">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 text-red-400">
+                        📸 Screenshots
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <% movie.screenshots.forEach((screenshot, index) => { %>
+                            <div class="relative group cursor-pointer" onclick="openLightbox('<%= screenshot %>')">
+                                <img src="<%= screenshot %>" alt="Screenshot <%= index + 1 %>" class="w-full h-48 object-cover rounded-lg shadow-lg group-hover:shadow-2xl transition-all duration-300" loading="lazy">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <div class="text-white text-4xl opacity-0 group-hover:opacity-100 transition-opacity">
+                                        🔍
+                                    </div>
+                                </div>
+                            </div>
+                            <% }); %>
+                    </div>
+                </div>
+                <% } %>
+
+                    <!-- Similar Movies Section -->
+                    <% if (suggestions && suggestions.length > 0) { %>
+                        <div class="glass rounded-2xl p-6 sm:p-8 mb-8">
+                            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 text-red-400">
+                                🎬 Similar Movies
+                            </h2>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                                <% suggestions.forEach(similar => { %>
+                                    <div class="movie-card glass rounded-xl overflow-hidden" onclick="window.location.href='/movies/<%= similar._id %>'">
+                                        <div class="relative">
+                                            <img src="<%= similar.poster %>" alt="<%= similar.title %>" class="w-full h-64 object-cover" loading="lazy">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                                            <div class="absolute bottom-0 left-0 right-0 p-3">
+                                                <h3 class="text-sm font-semibold text-white truncate">
+                                                    <%= similar.title %>
+                                                </h3>
+                                                <p class="text-xs text-gray-300 mt-1">
+                                                    <%= similar.movieLanguage %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                            </div>
+                        </div>
+                        <% } %>
+        </div>
     </div>
+
+    <!-- Lightbox Modal for Screenshots -->
+    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center" onclick="closeLightbox()">
+        <div class="relative max-w-4xl max-h-full p-4">
+            <img id="lightboxImage" src="" alt="Screenshot" class="max-w-full max-h-full object-contain rounded-lg">
+            <button onclick="closeLightbox()" class="absolute top-4 right-4 text-white text-4xl hover:text-red-400 transition">
+                ×
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass mt-16 py-8 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="text-gray-400">
+                © 2024 MovieHub. All rights reserved. |
+                <a href="/privacy" class="hover:text-red-400 transition">Privacy Policy</a> |
+                <a href="/terms" class="hover:text-red-400 transition">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Lightbox functionality
+        function openLightbox(imageSrc) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightboxImage');
+            lightboxImage.src = imageSrc;
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close lightbox with ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add loading states for images
+        document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.3s ease';
+        });
+    </script>
 </body>
 
 </html>

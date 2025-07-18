@@ -20,6 +20,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(adminAuth); // Sets res.locals.isAdmin
 
+
+
+
 // MongoDB Connection
 mongoose
     .connect(
@@ -76,8 +79,7 @@ app.get("/", async(req, res) => {
 
         const totalPages = Math.ceil(totalMovies / limit);
         const trendingMovies = !searchQuery && !category ?
-            await Movie.find().sort({ createdAt: -1 }).limit(4) :
-            [];
+            await Movie.find().sort({ createdAt: -1 }).limit(4) : [];
 
         res.render("home", {
             movies,
@@ -138,14 +140,33 @@ app.get("/movies/:id", async(req, res) => {
     }
 });
 
-// Download Page
-app.get("/download/:id", async(req, res) => {
+// Enhanced Download Page
+app.get("/movies/download/:id", async(req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
-        if (!movie) return res.status(404).send("Movie not found");
+        const movieId = req.params.id;
+        const movie = await Movie.findById(movieId).lean();
+
+        if (!movie) {
+            return res.status(404).render("error", {
+                message: "Movie not found",
+                statusCode: 404,
+            });
+        }
+
+        if (!movie.qualityLinks || Object.keys(movie.qualityLinks).length === 0) {
+            return res.status(400).render("error", {
+                message: "No download links found for this movie.",
+                statusCode: 400,
+            });
+        }
+
         res.render("download", { movie });
     } catch (err) {
-        res.status(500).send("Error loading download page");
+        console.error("🚨 Error rendering download page:", err);
+        return res.status(500).render("error", {
+            message: "Internal Server Error",
+            statusCode: 500,
+        });
     }
 });
 
@@ -163,9 +184,7 @@ app.post("/admin/add", async(req, res) => {
         const { screenshots } = req.body;
         const validScreenshots = Array.isArray(screenshots) ?
             screenshots.filter((s) => s.trim() !== "") :
-            screenshots ?
-            [screenshots.trim()] :
-            [];
+            screenshots ? [screenshots.trim()] : [];
 
         if (validScreenshots.length < 3) {
             return res.status(400).send("❌ Please enter at least 3 screenshots.");
@@ -175,11 +194,9 @@ app.post("/admin/add", async(req, res) => {
             ...req.body,
             cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
             genre: req.body.genre ?
-                req.body.genre.split(",").map((s) => s.trim()) :
-                [],
+                req.body.genre.split(",").map((s) => s.trim()) : [],
             quality: req.body.quality ?
-                req.body.quality.split(",").map((s) => s.trim()) :
-                [],
+                req.body.quality.split(",").map((s) => s.trim()) : [],
             screenshots: validScreenshots,
             qualityLinks: req.body.qualityLinks,
         };
@@ -191,6 +208,8 @@ app.post("/admin/add", async(req, res) => {
         res.status(500).send("Failed to add movie");
     }
 });
+
+
 
 // Admin: Edit Movie (Form)
 app.get("/admin/edit/:id", async(req, res) => {
@@ -208,19 +227,15 @@ app.post("/admin/edit/:id", async(req, res) => {
         const { screenshots } = req.body;
         const validScreenshots = Array.isArray(screenshots) ?
             screenshots.filter((s) => s.trim()) :
-            screenshots ?
-            [screenshots.trim()] :
-            [];
+            screenshots ? [screenshots.trim()] : [];
 
         const updatedData = {
             ...req.body,
             cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
             genre: req.body.genre ?
-                req.body.genre.split(",").map((s) => s.trim()) :
-                [],
+                req.body.genre.split(",").map((s) => s.trim()) : [],
             quality: req.body.quality ?
-                req.body.quality.split(",").map((s) => s.trim()) :
-                [],
+                req.body.quality.split(",").map((s) => s.trim()) : [],
             screenshots: validScreenshots,
             qualityLinks: req.body.qualityLinks,
         };
