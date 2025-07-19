@@ -6,6 +6,8 @@ import bodyParser from "body-parser";
 import lodash from "lodash";
 import Movie from "./models/movies.js";
 import adminAuth from "./middleware/adminAuth.js";
+import movieRoutes from "./routes/movies.js";
+
 
 const { escapeRegExp } = lodash;
 const app = express();
@@ -21,7 +23,7 @@ app.use(bodyParser.json());
 app.use(adminAuth); // Sets res.locals.isAdmin
 
 
-
+app.use("/", movieRoutes);
 
 // MongoDB Connection
 mongoose
@@ -110,6 +112,7 @@ app.get("/seed", async(req, res) => {
             "https://i.imgur.com/3Q1JJoE.jpg",
             "https://i.imgur.com/uXjlzJq.jpg",
             "https://i.imgur.com/a1z9HkR.jpg",
+
         ],
         qualityLinks: {
             "480p": "https://drive.google.com/480plink",
@@ -176,38 +179,6 @@ app.get("/admin/add", (req, res) => {
     res.render("add", { adminQuery: req.query.admin });
 });
 
-// Admin: Add Movie (Handler)
-app.post("/admin/add", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
-    try {
-        const { screenshots } = req.body;
-        const validScreenshots = Array.isArray(screenshots) ?
-            screenshots.filter((s) => s.trim() !== "") :
-            screenshots ? [screenshots.trim()] : [];
-
-        if (validScreenshots.length < 3) {
-            return res.status(400).send("❌ Please enter at least 3 screenshots.");
-        }
-
-        const movieData = {
-            ...req.body,
-            cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
-            genre: req.body.genre ?
-                req.body.genre.split(",").map((s) => s.trim()) : [],
-            quality: req.body.quality ?
-                req.body.quality.split(",").map((s) => s.trim()) : [],
-            screenshots: validScreenshots,
-            qualityLinks: req.body.qualityLinks,
-        };
-
-        await Movie.create(movieData);
-        res.redirect("/?admin=8892");
-    } catch (err) {
-        console.error("❌ Failed to add movie:", err.message);
-        res.status(500).send("Failed to add movie");
-    }
-});
 
 
 

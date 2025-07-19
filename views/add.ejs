@@ -15,7 +15,7 @@
         <% if (!isAdmin) { %>
             <p class="text-red-500 text-center">Access Denied. Only admins can add movies.</p>
             <% } else { %>
-                <!-- Debug info (remove in production) -->
+                <!-- Debug info -->
                 <div id="debug-info" class="mb-4 p-3 bg-blue-900 rounded hidden">
                     <h3 class="text-blue-400 font-bold">Form Data Preview:</h3>
                     <pre id="form-preview" class="text-sm mt-2"></pre>
@@ -30,23 +30,23 @@
                     <input type="text" name="quality" placeholder="Quality (comma-separated)" required class="p-3 rounded bg-gray-700" />
                     <input type="url" name="poster" placeholder="Poster URL" required class="p-3 rounded bg-gray-700" />
 
-                    <!-- Screenshot inputs (minimum 3 required) -->
+                    <!-- Screenshot inputs - ORIGINAL FORMAT with same name -->
                     <div>
                         <label class="block mb-2 font-semibold text-green-400">Screenshots (Minimum 3 Required)</label>
-                        <input type="url" name="screenshot1" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 1 URL" required>
-                        <input type="url" name="screenshot2" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 2 URL" required>
-                        <input type="url" name="screenshot3" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 3 URL" required>
-                        <input type="url" name="screenshot4" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 4 URL (Optional)">
-                        <input type="url" name="screenshot5" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 5 URL (Optional)">
+                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 1 URL" required>
+                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 2 URL" required>
+                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 3 URL" required>
+                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 4 URL (Optional)">
+                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 5 URL (Optional)">
                     </div>
 
-                    <!-- Quality links with individual names -->
+                    <!-- Quality links - ORIGINAL FORMAT -->
                     <div>
                         <label class="block mb-2 font-semibold text-green-400">Download Links by Quality</label>
-                        <input type="url" name="link480p" placeholder="480p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="link720p" placeholder="720p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="link1080p" placeholder="1080p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="linkOther" placeholder="Other Quality Link" class="p-3 rounded bg-gray-700" />
+                        <input type="url" name="qualityLinks[480p]" placeholder="480p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
+                        <input type="url" name="qualityLinks[720p]" placeholder="720p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
+                        <input type="url" name="qualityLinks[1080p]" placeholder="1080p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
+                        <input type="url" name="qualityLinks[other]" placeholder="Other Quality Link" class="p-3 rounded bg-gray-700" />
                     </div>
 
                     <button type="button" onclick="toggleDebug()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">
@@ -68,8 +68,17 @@
                             const formData = new FormData(form);
                             const data = {};
 
+                            // Handle multiple values with same name (screenshots)
                             for (let [key, value] of formData.entries()) {
-                                data[key] = value;
+                                if (data[key]) {
+                                    if (Array.isArray(data[key])) {
+                                        data[key].push(value);
+                                    } else {
+                                        data[key] = [data[key], value];
+                                    }
+                                } else {
+                                    data[key] = value;
+                                }
                             }
 
                             formPreview.textContent = JSON.stringify(data, null, 2);
@@ -79,26 +88,46 @@
                         }
                     }
 
-                    // Enhanced form validation
+                    // FIXED validation for original format
                     document.getElementById("movieForm").addEventListener("submit", function(e) {
-                        // Check required screenshot fields
-                        const requiredScreenshots = ['screenshot1', 'screenshot2', 'screenshot3'];
-                        const missingScreenshots = requiredScreenshots.filter(name => {
-                            const input = document.querySelector(`input[name="${name}"]`);
-                            return !input.value.trim();
+                        const screenshotInputs = document.querySelectorAll("input[name='screenshots']");
+                        const filledScreenshots = [];
+                        const emptyScreenshots = [];
+
+                        screenshotInputs.forEach((input, index) => {
+                            const value = input.value.trim();
+                            if (value) {
+                                filledScreenshots.push({
+                                    index: index + 1,
+                                    value
+                                });
+                            } else if (index < 3) { // First 3 are required
+                                emptyScreenshots.push(index + 1);
+                            }
                         });
 
-                        if (missingScreenshots.length > 0) {
-                            alert(`❌ Please fill in the first 3 screenshot URLs. Missing: ${missingScreenshots.join(', ')}`);
+                        console.log('Screenshot validation:', {
+                            total: screenshotInputs.length,
+                            filled: filledScreenshots.length,
+                            empty: emptyScreenshots.length,
+                            filledScreenshots,
+                            emptyScreenshots
+                        });
+
+                        // Check if at least first 3 are filled
+                        if (emptyScreenshots.length > 0) {
+                            alert(`❌ Please fill in Screenshot ${emptyScreenshots.join(', ')}. The first 3 screenshots are required.`);
+                            // Focus on first empty required field
+                            screenshotInputs[emptyScreenshots[0] - 1].focus();
                             e.preventDefault();
                             return;
                         }
 
-                        // Validate URL formats for screenshots
-                        const allScreenshotInputs = document.querySelectorAll('.screenshot-input');
-                        for (let input of allScreenshotInputs) {
-                            if (input.value.trim() && !isValidURL(input.value.trim())) {
-                                alert(`❌ Invalid URL format in ${input.placeholder}`);
+                        // Validate URL formats for filled screenshots
+                        for (let screenshot of filledScreenshots) {
+                            if (!isValidURL(screenshot.value)) {
+                                alert(`❌ Invalid URL format in Screenshot ${screenshot.index}. Please enter a valid URL starting with http:// or https://`);
+                                screenshotInputs[screenshot.index - 1].focus();
                                 e.preventDefault();
                                 return;
                             }
@@ -106,43 +135,75 @@
 
                         // Show loading state
                         const submitBtn = e.target.querySelector('button[type="submit"]');
+                        const originalText = submitBtn.innerHTML;
                         submitBtn.innerHTML = '⏳ Adding Movie...';
                         submitBtn.disabled = true;
+
+                        // Re-enable button after 10 seconds in case of error
+                        setTimeout(() => {
+                            if (submitBtn.disabled) {
+                                submitBtn.innerHTML = originalText;
+                                submitBtn.disabled = false;
+                            }
+                        }, 10000);
                     });
 
                     function isValidURL(string) {
                         try {
                             new URL(string);
-                            return true;
+                            return string.startsWith('http://') || string.startsWith('https://');
                         } catch (_) {
                             return false;
                         }
                     }
 
-                    // Auto-save form data to prevent loss on refresh
+                    // Auto-save form data to prevent loss
                     const form = document.getElementById('movieForm');
                     const inputs = form.querySelectorAll('input, textarea');
 
                     inputs.forEach(input => {
+                        const storageKey = `movieForm_${input.name}_${input.placeholder || ''}`;
+
                         // Load saved data
-                        const saved = localStorage.getItem(`movieForm_${input.name}`);
+                        const saved = localStorage.getItem(storageKey);
                         if (saved && !input.value) {
                             input.value = saved;
                         }
 
                         // Save data on change
                         input.addEventListener('input', () => {
-                            localStorage.setItem(`movieForm_${input.name}`, input.value);
+                            if (input.value.trim()) {
+                                localStorage.setItem(storageKey, input.value);
+                            } else {
+                                localStorage.removeItem(storageKey);
+                            }
                         });
                     });
 
                     // Clear saved data on successful submission
                     form.addEventListener('submit', () => {
+                        // Only clear if form actually submits (no validation errors)
                         setTimeout(() => {
-                            inputs.forEach(input => {
-                                localStorage.removeItem(`movieForm_${input.name}`);
-                            });
-                        }, 1000);
+                            if (!form.querySelector('button[type="submit"]').disabled) {
+                                inputs.forEach(input => {
+                                    const storageKey = `movieForm_${input.name}_${input.placeholder || ''}`;
+                                    localStorage.removeItem(storageKey);
+                                });
+                            }
+                        }, 2000);
+                    });
+
+                    // Add visual feedback for validation
+                    document.querySelectorAll('input[required], textarea[required]').forEach(input => {
+                        input.addEventListener('blur', function() {
+                            if (this.value.trim()) {
+                                this.classList.remove('border-red-500');
+                                this.classList.add('border-green-500');
+                            } else {
+                                this.classList.remove('border-green-500');
+                                this.classList.add('border-red-500');
+                            }
+                        });
                     });
                 </script>
                 <% } %>

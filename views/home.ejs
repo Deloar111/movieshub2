@@ -172,14 +172,15 @@
 
     <!-- Header with glassmorphism -->
     <header class="glass-dark sticky top-0 z-50 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="max-w-7xl mx-auto px-0 py-0">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="relative">
                         <div class="absolute inset-0 gradient-bg rounded-lg blur opacity-75"></div>
-                        <h1 class="relative text-3xl font-bold text-white px-4 py-2 bg-black/50 rounded-lg font-mono">
+                        <h1 class="relative text-xl font-bold text-white px-3 py-1 bg-black/50 rounded-md font-mono">
                             🍿 M0viEsS HUB
                         </h1>
+
                     </div>
                     <div class="hidden md:flex items-center space-x-2 text-sm text-gray-400">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -211,15 +212,17 @@
             <% } %>
 
                 <!-- Enhanced Search Bar -->
-                <form method="GET" class="mb-8">
+                <form method="GET" class="mb-2">
                     <div class="relative max-w-2xl mx-auto">
                         <div class="absolute inset-0 gradient-bg rounded-2xl blur opacity-30"></div>
                         <div class="relative glass rounded-2xl p-1">
                             <div class="flex">
-                                <input type="text" name="search" value="<%= searchQuery %>" placeholder="Search movies, series, actors..." class="flex-1 px-6 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg" />
-                                <button type="submit" class="magnetic-btn px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:from-red-400 hover:to-pink-500 font-semibold transition-all duration-300">
-                            🔍 Search
-                        </button>
+                                <input type="text" name="search" value="<%= searchQuery %>" placeholder="Search movies, series, actors..." class="flex-1 px- py- bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg" />
+                                <button type="submit" class="magnetic-btn px-3 py-1.5 text-sm bg-pink-600 hover:bg-pink-500 rounded-md font-medium transition-all duration-300">
+    🔍
+</button>
+
+
                             </div>
                         </div>
                     </div>
@@ -229,9 +232,10 @@
                 <div class="flex flex-wrap justify-center gap-3 mb-12">
                     <% const categories = ["All Movies", "Web Series", "South Hindi Dubbed", "Bollywood", "Hollywood Hindi", "Dual Audio"]; %>
                         <% categories.forEach(cat => { %>
-                            <a href="/?category=<%= cat %>" class="ripple px-6 py-3 rounded-full transition-all duration-300 font-medium <%= category === cat ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
+                            <a href="/?category=<%= cat %>" class="ripple px-3 py-1.5 text-sm rounded-full transition-all duration-300 font-medium <%= category === cat ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
                                 <%= cat %>
                             </a>
+
                             <% }) %>
                 </div>
 

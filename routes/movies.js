@@ -1,5 +1,5 @@
 import express from "express";
-import Movie from "../models/Movie.js";
+import Movie from "../models/movies.js";
 import adminAuth from "../middleware/adminAuth.js";
 
 const router = express.Router();
