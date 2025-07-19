@@ -229,7 +229,7 @@
                 </form>
 
                 <!-- Modern Category Pills -->
-                <div class="flex flex-wrap justify-center gap-3 mb-12">
+                <div class="flex flex-wrap justify-center gap-2 mb-5">
                     <% const categories = ["All Movies", "Web Series", "South Hindi Dubbed", "Bollywood", "Hollywood Hindi",]; %>
                         <% categories.forEach(cat => { %>
                             <a href="/?category=<%= cat %>" class="ripple px-1 py-1.5 text-sm rounded-full transition-all duration-300 font-medium <%= category === cat ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
@@ -241,9 +241,9 @@
 
                 <!-- Trending Section with enhanced design -->
                 <% if (trendingMovies && trendingMovies.length > 0) { %>
-                    <section class="mb-16">
-                        <div class="flex items-center space-x-4 mb-8">
-                            <h2 class="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                    <section class="mb-">
+                        <div class="flex items-center space-x- mb-">
+                            <h2 class="text-4xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
                                 🔥 Trending Now
                             </h2>
                             <div class="flex-1 h-px bg-gradient-to-r from-red-500/50 to-transparent"></div>
