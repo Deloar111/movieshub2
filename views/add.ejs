@@ -3,211 +3,269 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Add Movie</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Movie - M0viEsHUB Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold mb-6 text-center text-green-400">➕ Add New Movie</h1>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-gray-800 rounded-lg shadow-lg p-8">
+            <h1 class="text-3xl font-bold text-red-500 mb-8">🎬 Add New Movie</h1>
 
-        <% if (!isAdmin) { %>
-            <p class="text-red-500 text-center">Access Denied. Only admins can add movies.</p>
-            <% } else { %>
-                <!-- Debug info -->
-                <div id="debug-info" class="mb-4 p-3 bg-blue-900 rounded hidden">
-                    <h3 class="text-blue-400 font-bold">Form Data Preview:</h3>
-                    <pre id="form-preview" class="text-sm mt-2"></pre>
+            <form id="movieForm" action="/movies/admin/add" method="POST" class="space-y-6">
+
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium mb-2">Movie Title *</label>
+                    <input type="text" id="title" name="title" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Enter movie title">
                 </div>
 
-                <form id="movieForm" action="/admin/add?admin=8892" method="POST" class="grid gap-4">
-                    <input type="text" name="title" placeholder="Title" required class="p-3 rounded bg-gray-700" />
-                    <textarea name="description" placeholder="Description" rows="4" required class="p-3 rounded bg-gray-700"></textarea>
-                    <input type="text" name="cast" placeholder="Cast (comma-separated)" required class="p-3 rounded bg-gray-700" />
-                    <input type="text" name="genre" placeholder="Genre (comma-separated)" required class="p-3 rounded bg-gray-700" />
-                    <input type="text" name="movieLanguage" placeholder="Language" required class="p-3 rounded bg-gray-700" />
-                    <input type="text" name="quality" placeholder="Quality (comma-separated)" required class="p-3 rounded bg-gray-700" />
-                    <input type="url" name="poster" placeholder="Poster URL" required class="p-3 rounded bg-gray-700" />
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium mb-2">Description *</label>
+                    <textarea id="description" name="description" required rows="4" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Enter movie description (minimum 10 characters)"></textarea>
+                </div>
 
-                    <!-- Screenshot inputs - ORIGINAL FORMAT with same name -->
-                    <div>
-                        <label class="block mb-2 font-semibold text-green-400">Screenshots (Minimum 3 Required)</label>
-                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 1 URL" required>
-                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 2 URL" required>
-                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 3 URL" required>
-                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 4 URL (Optional)">
-                        <input type="url" name="screenshots" class="screenshot-input block w-full p-2 mb-2 bg-gray-700 rounded" placeholder="Screenshot 5 URL (Optional)">
+                <!-- Cast -->
+                <div>
+                    <label for="cast" class="block text-sm font-medium mb-2">Cast (comma-separated)</label>
+                    <input type="text" id="cast" name="cast" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Actor 1, Actor 2, Actor 3">
+                </div>
+
+                <!-- Genre -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Genre * (Select at least one)</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Action" class="mr-2">
+                            Action
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Adventure" class="mr-2">
+                            Adventure
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Comedy" class="mr-2">
+                            Comedy
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Drama" class="mr-2">
+                            Drama
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Horror" class="mr-2">
+                            Horror
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Romance" class="mr-2">
+                            Romance
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Sci-Fi" class="mr-2">
+                            Sci-Fi
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Thriller" class="mr-2">
+                            Thriller
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Documentary" class="mr-2">
+                            Documentary
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Animation" class="mr-2">
+                            Animation
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Fantasy" class="mr-2">
+                            Fantasy
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Crime" class="mr-2">
+                            Crime
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Mystery" class="mr-2">
+                            Mystery
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="War" class="mr-2">
+                            War
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Western" class="mr-2">
+                            Western
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Musical" class="mr-2">
+                            Musical
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Biography" class="mr-2">
+                            Biography
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Family" class="mr-2">
+                            Family
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="Sport" class="mr-2">
+                            Sport
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="genre" value="History" class="mr-2">
+                            History
+                        </label>
                     </div>
+                </div>
 
-                    <!-- Quality links - ORIGINAL FORMAT -->
-                    <div>
-                        <label class="block mb-2 font-semibold text-green-400">Download Links by Quality</label>
-                        <input type="url" name="qualityLinks[480p]" placeholder="480p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="qualityLinks[720p]" placeholder="720p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="qualityLinks[1080p]" placeholder="1080p Download Link" class="p-3 rounded bg-gray-700 mb-2" />
-                        <input type="url" name="qualityLinks[other]" placeholder="Other Quality Link" class="p-3 rounded bg-gray-700" />
+                <!-- Language -->
+                <div>
+                    <label for="movieLanguage" class="block text-sm font-medium mb-2">Movie Language *</label>
+                    <select id="movieLanguage" name="movieLanguage" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="">Select Language</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Korean">Korean</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Russian">Russian</option>
+                        <option value="Arabic">Arabic</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Quality -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Available Qualities * (Select at least one)</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="quality" value="480p" class="mr-2">
+                            480p
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="quality" value="720p" class="mr-2">
+                            720p
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="quality" value="1080p" class="mr-2">
+                            1080p
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="quality" value="4K" class="mr-2">
+                            4K
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="quality" value="HDR" class="mr-2">
+                            HDR
+                        </label>
                     </div>
+                </div>
 
-                    <button type="button" onclick="toggleDebug()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">
-                    🔍 Preview Form Data
-                </button>
+                <!-- Poster URL -->
+                <div>
+                    <label for="poster" class="block text-sm font-medium mb-2">Poster URL *</label>
+                    <input type="url" id="poster" name="poster" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/poster.jpg">
+                </div>
 
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold">
-                    ➕ Add Movie
-                </button>
-                </form>
+                <!-- Screenshots -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Screenshots * (At least 3 URLs)</label>
+                    <div class="space-y-2">
+                        <input type="url" name="screenshots" placeholder="Screenshot 1 URL" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <input type="url" name="screenshots" placeholder="Screenshot 2 URL" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <input type="url" name="screenshots" placeholder="Screenshot 3 URL" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <button type="button" id="addScreenshot" class="text-blue-400 hover:text-blue-300">+ Add More Screenshots</button>
+                    </div>
+                </div>
 
-                <script>
-                    function toggleDebug() {
-                        const debugDiv = document.getElementById('debug-info');
-                        const formPreview = document.getElementById('form-preview');
-                        const form = document.getElementById('movieForm');
+                <!-- Quality Links -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Download Links</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="quality_480p" class="block text-sm font-medium mb-1">480p Download Link</label>
+                            <input type="url" id="quality_480p" name="qualityLinks[480p]" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/480p-download">
+                        </div>
+                        <div>
+                            <label for="quality_720p" class="block text-sm font-medium mb-1">720p Download Link</label>
+                            <input type="url" id="quality_720p" name="qualityLinks[720p]" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/720p-download">
+                        </div>
+                        <div>
+                            <label for="quality_1080p" class="block text-sm font-medium mb-1">1080p Download Link</label>
+                            <input type="url" id="quality_1080p" name="qualityLinks[1080p]" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/1080p-download">
+                        </div>
+                        <div>
+                            <label for="quality_4k" class="block text-sm font-medium mb-1">4K Download Link</label>
+                            <input type="url" id="quality_4k" name="qualityLinks[4K]" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/4k-download">
+                        </div>
+                        <div>
+                            <label for="quality_other" class="block text-sm font-medium mb-1">Other Quality Link</label>
+                            <input type="url" id="quality_other" name="qualityLinks[other]" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="https://example.com/other-quality">
+                        </div>
+                    </div>
+                </div>
 
-                        if (debugDiv.classList.contains('hidden')) {
-                            const formData = new FormData(form);
-                            const data = {};
-
-                            // Handle multiple values with same name (screenshots)
-                            for (let [key, value] of formData.entries()) {
-                                if (data[key]) {
-                                    if (Array.isArray(data[key])) {
-                                        data[key].push(value);
-                                    } else {
-                                        data[key] = [data[key], value];
-                                    }
-                                } else {
-                                    data[key] = value;
-                                }
-                            }
-
-                            formPreview.textContent = JSON.stringify(data, null, 2);
-                            debugDiv.classList.remove('hidden');
-                        } else {
-                            debugDiv.classList.add('hidden');
-                        }
-                    }
-
-                    // FIXED validation for original format
-                    document.getElementById("movieForm").addEventListener("submit", function(e) {
-                        const screenshotInputs = document.querySelectorAll("input[name='screenshots']");
-                        const filledScreenshots = [];
-                        const emptyScreenshots = [];
-
-                        screenshotInputs.forEach((input, index) => {
-                            const value = input.value.trim();
-                            if (value) {
-                                filledScreenshots.push({
-                                    index: index + 1,
-                                    value
-                                });
-                            } else if (index < 3) { // First 3 are required
-                                emptyScreenshots.push(index + 1);
-                            }
-                        });
-
-                        console.log('Screenshot validation:', {
-                            total: screenshotInputs.length,
-                            filled: filledScreenshots.length,
-                            empty: emptyScreenshots.length,
-                            filledScreenshots,
-                            emptyScreenshots
-                        });
-
-                        // Check if at least first 3 are filled
-                        if (emptyScreenshots.length > 0) {
-                            alert(`❌ Please fill in Screenshot ${emptyScreenshots.join(', ')}. The first 3 screenshots are required.`);
-                            // Focus on first empty required field
-                            screenshotInputs[emptyScreenshots[0] - 1].focus();
-                            e.preventDefault();
-                            return;
-                        }
-
-                        // Validate URL formats for filled screenshots
-                        for (let screenshot of filledScreenshots) {
-                            if (!isValidURL(screenshot.value)) {
-                                alert(`❌ Invalid URL format in Screenshot ${screenshot.index}. Please enter a valid URL starting with http:// or https://`);
-                                screenshotInputs[screenshot.index - 1].focus();
-                                e.preventDefault();
-                                return;
-                            }
-                        }
-
-                        // Show loading state
-                        const submitBtn = e.target.querySelector('button[type="submit"]');
-                        const originalText = submitBtn.innerHTML;
-                        submitBtn.innerHTML = '⏳ Adding Movie...';
-                        submitBtn.disabled = true;
-
-                        // Re-enable button after 10 seconds in case of error
-                        setTimeout(() => {
-                            if (submitBtn.disabled) {
-                                submitBtn.innerHTML = originalText;
-                                submitBtn.disabled = false;
-                            }
-                        }, 10000);
-                    });
-
-                    function isValidURL(string) {
-                        try {
-                            new URL(string);
-                            return string.startsWith('http://') || string.startsWith('https://');
-                        } catch (_) {
-                            return false;
-                        }
-                    }
-
-                    // Auto-save form data to prevent loss
-                    const form = document.getElementById('movieForm');
-                    const inputs = form.querySelectorAll('input, textarea');
-
-                    inputs.forEach(input => {
-                        const storageKey = `movieForm_${input.name}_${input.placeholder || ''}`;
-
-                        // Load saved data
-                        const saved = localStorage.getItem(storageKey);
-                        if (saved && !input.value) {
-                            input.value = saved;
-                        }
-
-                        // Save data on change
-                        input.addEventListener('input', () => {
-                            if (input.value.trim()) {
-                                localStorage.setItem(storageKey, input.value);
-                            } else {
-                                localStorage.removeItem(storageKey);
-                            }
-                        });
-                    });
-
-                    // Clear saved data on successful submission
-                    form.addEventListener('submit', () => {
-                        // Only clear if form actually submits (no validation errors)
-                        setTimeout(() => {
-                            if (!form.querySelector('button[type="submit"]').disabled) {
-                                inputs.forEach(input => {
-                                    const storageKey = `movieForm_${input.name}_${input.placeholder || ''}`;
-                                    localStorage.removeItem(storageKey);
-                                });
-                            }
-                        }, 2000);
-                    });
-
-                    // Add visual feedback for validation
-                    document.querySelectorAll('input[required], textarea[required]').forEach(input => {
-                        input.addEventListener('blur', function() {
-                            if (this.value.trim()) {
-                                this.classList.remove('border-red-500');
-                                this.classList.add('border-green-500');
-                            } else {
-                                this.classList.remove('border-green-500');
-                                this.classList.add('border-red-500');
-                            }
-                        });
-                    });
-                </script>
-                <% } %>
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-4">
+                    <a href="/?admin=8892" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Add Movie
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <script>
+        // Add more screenshot inputs dynamically
+        document.getElementById('addScreenshot').addEventListener('click', function() {
+            const container = this.parentElement;
+            const newInput = document.createElement('input');
+            newInput.type = 'url';
+            newInput.name = 'screenshots';
+            newInput.placeholder = 'Screenshot URL';
+            newInput.className = 'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500';
+            container.insertBefore(newInput, this);
+        });
+
+        // Form validation
+        document.getElementById('movieForm').addEventListener('submit', function(e) {
+            const genreCheckboxes = document.querySelectorAll('input[name="genre"]:checked');
+            const qualityCheckboxes = document.querySelectorAll('input[name="quality"]:checked');
+            const screenshotInputs = document.querySelectorAll('input[name="screenshots"]');
+
+            let validScreenshots = 0;
+            screenshotInputs.forEach(input => {
+                if (input.value.trim() !== '') validScreenshots++;
+            });
+
+            if (genreCheckboxes.length === 0) {
+                alert('Please select at least one genre.');
+                e.preventDefault();
+                return;
+            }
+
+            if (qualityCheckboxes.length === 0) {
+                alert('Please select at least one quality option.');
+                e.preventDefault();
+                return;
+            }
+
+            if (validScreenshots < 3) {
+                alert('Please provide at least 3 screenshot URLs.');
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
 </body>
 
 </html>

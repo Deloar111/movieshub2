@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Movie from "../models/movies.js";
 import adminAuth from "../middleware/adminAuth.js";
 
@@ -88,14 +89,26 @@ class MovieValidator {
 
     static sanitizeArray(input) {
         if (!input) return [];
-        return input.split(",")
-            .map(s => s.trim())
+
+        // Handle both string and array inputs
+        let arrayInput;
+        if (typeof input === 'string') {
+            arrayInput = input.split(",");
+        } else if (Array.isArray(input)) {
+            arrayInput = input;
+        } else {
+            return [];
+        }
+
+        return arrayInput
+            .map(s => s.toString().trim())
             .filter(s => s.length > 0)
             .map(s => this.sanitizeString(s));
     }
 
     static sanitizeString(input) {
-        return input.replace(/[<>]/g, "").trim();
+        if (!input) return '';
+        return input.toString().replace(/[<>]/g, "").trim();
     }
 
     static validateMovieData(body) {
@@ -118,6 +131,36 @@ class MovieValidator {
             errors.push(screenshotValidation.error);
         }
 
+        // Validate genre - ensure it matches schema enum values
+        const validGenres = [
+            'Action', 'Adventure', 'Comedy', 'Drama', 'Horror',
+            'Romance', 'Sci-Fi', 'Thriller', 'Documentary', 'Animation',
+            'Fantasy', 'Crime', 'Mystery', 'War', 'Western', 'Musical',
+            'Biography', 'Family', 'Sport', 'History'
+        ];
+
+        const genreArray = this.sanitizeArray(body.genre);
+        const invalidGenres = genreArray.filter(g => !validGenres.includes(g));
+        if (invalidGenres.length > 0) {
+            errors.push(`Invalid genres: ${invalidGenres.join(', ')}. Valid genres are: ${validGenres.join(', ')}`);
+        }
+
+        // Validate quality
+        const validQualities = ['480p', '720p', '1080p', '4K', 'HDR'];
+        const qualityArray = this.sanitizeArray(body.quality);
+        const invalidQualities = qualityArray.filter(q => !validQualities.includes(q));
+        if (invalidQualities.length > 0) {
+            errors.push(`Invalid qualities: ${invalidQualities.join(', ')}. Valid qualities are: ${validQualities.join(', ')}`);
+        }
+
+        // Validate language
+        const validLanguages = ['English', 'Hindi', 'Spanish', 'French', 'German', 'Italian',
+            'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic', 'Other'
+        ];
+        if (!validLanguages.includes(body.movieLanguage)) {
+            errors.push(`Invalid language: ${body.movieLanguage}. Valid languages are: ${validLanguages.join(', ')}`);
+        }
+
         return {
             isValid: errors.length === 0,
             errors,
@@ -126,8 +169,8 @@ class MovieValidator {
                 description: this.sanitizeString(body.description),
                 poster: body.poster,
                 cast: this.sanitizeArray(body.cast),
-                genre: this.sanitizeArray(body.genre),
-                quality: this.sanitizeArray(body.quality),
+                genre: genreArray.filter(g => validGenres.includes(g)), // Only include valid genres
+                quality: qualityArray.filter(q => validQualities.includes(q)), // Only include valid qualities
                 movieLanguage: this.sanitizeString(body.movieLanguage),
                 screenshots: screenshotValidation.screenshots,
                 qualityLinks: body.qualityLinks || {}
@@ -172,18 +215,34 @@ class CacheManager {
 const cache = new CacheManager();
 
 // ============================
+// 📄 STATIC PAGES ROUTES
+// ============================
+router.get("/about", (req, res) => {
+    res.render("about");
+});
+
+router.get("/privacy", (req, res) => {
+    res.render("privacy");
+});
+
+// ============================
 // 🔐 ENHANCED ADMIN: ADD MOVIE
 // ============================
 router.post("/admin/add", adminAuth, async(req, res) => {
     try {
+        console.log("Received movie data:", req.body); // Debug log
+
         const validation = MovieValidator.validateMovieData(req.body);
 
         if (!validation.isValid) {
+            console.log("Validation errors:", validation.errors); // Debug log
             return res.status(400).json({
                 success: false,
                 errors: validation.errors
             });
         }
+
+        console.log("Sanitized data:", validation.sanitizedData); // Debug log
 
         const newMovie = await Movie.create(validation.sanitizedData);
 
@@ -192,20 +251,35 @@ router.post("/admin/add", adminAuth, async(req, res) => {
 
         res.redirect("/?admin=8892");
     } catch (err) {
-        console.error("❌ Error adding movie:", err.message);
+        console.error("❌ Error adding movie:", err);
         res.status(500).json({
             success: false,
-            error: "Failed to add movie"
+            error: err.message,
+            stack: err.stack
         });
     }
 });
 
 // ============================
-// 🎬 ENHANCED MOVIE DETAILS + SMART RECOMMENDATIONS
+// 🎬 MOVIE DETAILS WITH VALIDATION
 // ============================
 router.get("/:id", async(req, res) => {
     try {
         const movieId = req.params.id;
+
+        // Handle favicon request
+        if (movieId === 'favicon.ico') {
+            return res.status(204).end();
+        }
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(404).render("error", {
+                message: "Invalid movie ID",
+                statusCode: 404
+            });
+        }
+
         const cacheKey = `movie_details_${movieId}`;
 
         // Check cache first
@@ -222,6 +296,9 @@ router.get("/:id", async(req, res) => {
                 statusCode: 404
             });
         }
+
+        // Increment view count
+        await movie.incrementViews();
 
         // Get smart recommendations
         const suggestions = await MovieRecommendationEngine.getRecommendations(movie, 6);
@@ -247,6 +324,15 @@ router.get("/:id", async(req, res) => {
 router.get("/download/:id", async(req, res) => {
     try {
         const movieId = req.params.id;
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(404).render("error", {
+                message: "Invalid movie ID",
+                statusCode: 404
+            });
+        }
+
         const cacheKey = `movie_download_${movieId}`;
 
         let movie = cache.get(cacheKey);
@@ -260,6 +346,9 @@ router.get("/download/:id", async(req, res) => {
             }
             cache.set(cacheKey, movie);
         }
+
+        // Increment download count
+        await movie.incrementDownloads();
 
         res.render("download", { movie });
     } catch (err) {
@@ -276,7 +365,17 @@ router.get("/download/:id", async(req, res) => {
 // ============================
 router.get("/admin/edit/:id", adminAuth, async(req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
+        const movieId = req.params.id;
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(404).render("error", {
+                message: "Invalid movie ID",
+                statusCode: 404
+            });
+        }
+
+        const movie = await Movie.findById(movieId);
         if (!movie) {
             return res.status(404).render("error", {
                 message: "Movie not found",
@@ -296,6 +395,16 @@ router.get("/admin/edit/:id", adminAuth, async(req, res) => {
 
 router.post("/admin/edit/:id", adminAuth, async(req, res) => {
     try {
+        const movieId = req.params.id;
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid movie ID"
+            });
+        }
+
         const validation = MovieValidator.validateMovieData(req.body);
 
         if (!validation.isValid) {
@@ -305,7 +414,7 @@ router.post("/admin/edit/:id", adminAuth, async(req, res) => {
             });
         }
 
-        await Movie.findByIdAndUpdate(req.params.id, validation.sanitizedData);
+        await Movie.findByIdAndUpdate(movieId, validation.sanitizedData);
 
         // Clear cache after updating
         cache.clear();
@@ -325,7 +434,17 @@ router.post("/admin/edit/:id", adminAuth, async(req, res) => {
 // ============================
 router.get("/admin/delete/:id", adminAuth, async(req, res) => {
     try {
-        const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
+        const movieId = req.params.id;
+
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(404).json({
+                success: false,
+                error: "Invalid movie ID"
+            });
+        }
+
+        const deletedMovie = await Movie.findByIdAndDelete(movieId);
 
         if (!deletedMovie) {
             return res.status(404).json({

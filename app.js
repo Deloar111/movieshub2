@@ -8,7 +8,6 @@ import Movie from "./models/movies.js";
 import adminAuth from "./middleware/adminAuth.js";
 import movieRoutes from "./routes/movies.js";
 
-
 const { escapeRegExp } = lodash;
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,10 +21,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(adminAuth); // Sets res.locals.isAdmin
 
+// ============================
+// 🔧 FAVICON AND STATIC FILES HANDLING
+// ============================
+// Handle favicon request before other routes
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end(); // No content
+    // Or serve an actual favicon file:
+    // res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+});
 
-app.use("/", movieRoutes);
-
-// MongoDB Connection
+// MongoDB Connection (Preserved your original connection)
 mongoose
     .connect(
         process.env.MONGO_URL ||
@@ -34,7 +40,9 @@ mongoose
     .then(() => console.log("✅ MongoDB Connected"))
     .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// Homepage with Smart Search
+// ============================
+// 🏠 HOMEPAGE WITH SMART SEARCH
+// ============================
 app.get("/", async(req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -98,34 +106,122 @@ app.get("/", async(req, res) => {
     }
 });
 
-// Dummy Seeder
-app.get("/seed", async(req, res) => {
-    await Movie.create({
-        title: "Pushpa 2",
-        description: "Pushpa returns with more action and drama!",
-        cast: ["Allu Arjun"],
-        genre: ["South Hindi Dubbed", "Action"],
-        movieLanguage: "Hindi",
-        quality: ["480p", "720p", "1080p"],
-        poster: "https://i.imgur.com/P5cL4pp.jpeg",
-        screenshots: [
-            "https://i.imgur.com/3Q1JJoE.jpg",
-            "https://i.imgur.com/uXjlzJq.jpg",
-            "https://i.imgur.com/a1z9HkR.jpg",
+// ============================
+// 👨‍💼 ADMIN ROUTES (Main app level)
+// ============================
 
-        ],
-        qualityLinks: {
-            "480p": "https://drive.google.com/480plink",
-            "720p": "https://drive.google.com/720plink",
-            "1080p": "https://drive.google.com/1080plink",
-        },
-    });
-    res.send("✅ Dummy movie added!");
+// Admin: Add Movie (GET - Show Form)
+app.get("/admin/add", (req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+    res.render("add", { adminQuery: req.query.admin });
 });
 
-// Movie Details Page
+// Admin: Add Movie (POST - Handle Form Submission)
+app.post("/admin/add", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
+    try {
+        const { screenshots } = req.body;
+        const validScreenshots = Array.isArray(screenshots) ?
+            screenshots.filter((s) => s.trim()) :
+            screenshots ? [screenshots.trim()] : [];
+
+        const movieData = {
+            ...req.body,
+            cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
+            genre: req.body.genre ? req.body.genre.split(",").map((s) => s.trim()) : [],
+            quality: req.body.quality ? req.body.quality.split(",").map((s) => s.trim()) : [],
+            screenshots: validScreenshots,
+            qualityLinks: req.body.qualityLinks,
+        };
+
+        await Movie.create(movieData);
+        res.redirect("/?admin=8892");
+    } catch (err) {
+        console.error("❌ Error adding movie:", err);
+        res.status(500).send("Failed to add movie");
+    }
+});
+
+// Admin: Edit Movie (GET - Show Form)
+app.get("/admin/edit/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
+    try {
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).send("Invalid movie ID");
+        }
+
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) return res.status(404).send("Movie not found");
+        res.render("edit", { movie, adminQuery: req.query.admin });
+    } catch (err) {
+        console.error("❌ Error loading edit form:", err);
+        res.status(500).send("Error loading edit form");
+    }
+});
+
+// Admin: Edit Movie (POST - Handle Form Submission)
+app.post("/admin/edit/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
+    try {
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).send("Invalid movie ID");
+        }
+
+        const { screenshots } = req.body;
+        const validScreenshots = Array.isArray(screenshots) ?
+            screenshots.filter((s) => s.trim()) :
+            screenshots ? [screenshots.trim()] : [];
+
+        const updatedData = {
+            ...req.body,
+            cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
+            genre: req.body.genre ? req.body.genre.split(",").map((s) => s.trim()) : [],
+            quality: req.body.quality ? req.body.quality.split(",").map((s) => s.trim()) : [],
+            screenshots: validScreenshots,
+            qualityLinks: req.body.qualityLinks,
+        };
+
+        await Movie.findByIdAndUpdate(req.params.id, updatedData);
+        res.redirect("/?admin=8892");
+    } catch (err) {
+        console.error("❌ Error updating movie:", err);
+        res.status(500).send("Failed to update movie");
+    }
+});
+
+// Admin: Delete Movie
+app.get("/admin/delete/:id", async(req, res) => {
+    if (!res.locals.isAdmin) return res.redirect("/");
+
+    try {
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).send("Invalid movie ID");
+        }
+
+        await Movie.findByIdAndDelete(req.params.id);
+        res.redirect("/?admin=8892");
+    } catch (err) {
+        console.error("❌ Error deleting movie:", err);
+        res.status(500).send("Failed to delete movie");
+    }
+});
+
+// ============================
+// 🎬 MOVIE DETAILS & DOWNLOAD (Simplified for main app)
+// ============================
 app.get("/movies/:id", async(req, res) => {
     try {
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).send("Invalid movie ID");
+        }
+
         const movie = await Movie.findById(req.params.id);
         if (!movie) return res.status(404).send("Movie not found");
 
@@ -139,6 +235,7 @@ app.get("/movies/:id", async(req, res) => {
 
         res.render("details", { movie, suggestions });
     } catch (err) {
+        console.error("Error loading movie details:", err);
         res.status(500).send("Something went wrong");
     }
 });
@@ -146,90 +243,80 @@ app.get("/movies/:id", async(req, res) => {
 // Enhanced Download Page
 app.get("/movies/download/:id", async(req, res) => {
     try {
+        // Validate ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).send("Invalid movie ID");
+        }
+
         const movieId = req.params.id;
         const movie = await Movie.findById(movieId).lean();
 
         if (!movie) {
-            return res.status(404).render("error", {
-                message: "Movie not found",
-                statusCode: 404,
-            });
+            return res.status(404).send("Movie not found");
         }
 
         if (!movie.qualityLinks || Object.keys(movie.qualityLinks).length === 0) {
-            return res.status(400).render("error", {
-                message: "No download links found for this movie.",
-                statusCode: 400,
-            });
+            return res.status(400).send("No download links found for this movie.");
         }
 
         res.render("download", { movie });
     } catch (err) {
         console.error("🚨 Error rendering download page:", err);
-        return res.status(500).render("error", {
-            message: "Internal Server Error",
-            statusCode: 500,
-        });
+        return res.status(500).send("Internal Server Error");
     }
 });
 
-// Admin: Add Movie (Form)
-app.get("/admin/add", (req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-    res.render("add", { adminQuery: req.query.admin });
+// ============================
+// 📄 STATIC PAGES ROUTES - Alternative URLs
+// ============================
+app.get("/about-us", (req, res) => {
+    res.render("about");
 });
 
-
-
-
-// Admin: Edit Movie (Form)
-app.get("/admin/edit/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-    const movie = await Movie.findById(req.params.id);
-    if (!movie) return res.status(404).send("Movie not found");
-    res.render("edit", { movie, adminQuery: req.query.admin });
+app.get("/privacy-policy", (req, res) => {
+    res.render("privacy");
 });
 
-// Admin: Edit Movie (Handler)
-app.post("/admin/edit/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
+// ============================
+// 🌱 DEVELOPMENT SEEDER
+// ============================
+app.get("/seed", async(req, res) => {
     try {
-        const { screenshots } = req.body;
-        const validScreenshots = Array.isArray(screenshots) ?
-            screenshots.filter((s) => s.trim()) :
-            screenshots ? [screenshots.trim()] : [];
-
-        const updatedData = {
-            ...req.body,
-            cast: req.body.cast ? req.body.cast.split(",").map((s) => s.trim()) : [],
-            genre: req.body.genre ?
-                req.body.genre.split(",").map((s) => s.trim()) : [],
-            quality: req.body.quality ?
-                req.body.quality.split(",").map((s) => s.trim()) : [],
-            screenshots: validScreenshots,
-            qualityLinks: req.body.qualityLinks,
-        };
-
-        await Movie.findByIdAndUpdate(req.params.id, updatedData);
-        res.redirect("/?admin=8892");
+        await Movie.create({
+            title: "Pushpa 2",
+            description: "Pushpa returns with more action and drama!",
+            cast: ["Allu Arjun"],
+            genre: ["Action"], // Fixed: Use valid genre from schema
+            movieLanguage: "Hindi",
+            quality: ["480p", "720p", "1080p"],
+            poster: "https://i.imgur.com/P5cL4pp.jpeg",
+            screenshots: [
+                "https://i.imgur.com/3Q1JJoE.jpg",
+                "https://i.imgur.com/uXjlzJq.jpg",
+                "https://i.imgur.com/a1z9HkR.jpg",
+            ],
+            qualityLinks: {
+                "480p": "https://drive.google.com/480plink",
+                "720p": "https://drive.google.com/720plink",
+                "1080p": "https://drive.google.com/1080plink",
+            },
+        });
+        res.send("✅ Dummy movie added!");
     } catch (err) {
-        res.status(500).send("Failed to update movie");
+        console.error("❌ Error seeding data:", err);
+        res.status(500).send("Failed to seed data");
     }
 });
 
-// Admin: Delete Movie
-app.get("/admin/delete/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-    await Movie.findByIdAndDelete(req.params.id);
-    res.redirect("/?admin=8892");
-});
+// ============================
+// 🔗 USE MOVIE ROUTES - This should be LAST
+// ============================
+// Use movie routes (this will handle the dynamic :id routes)
+app.use("/", movieRoutes);
 
-// Static Pages
-app.get("/about-us", (req, res) => res.render("about"));
-app.get("/privacy-policy", (req, res) => res.render("privacy"));
-
-// Start Server
+// ============================
+// 🚀 START SERVER
+// ============================
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
