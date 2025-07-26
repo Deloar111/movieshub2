@@ -133,8 +133,7 @@ router.post(
                     req.body.cast
                     .split(",")
                     .map(c => c.replace(/^.*?:/, "").trim()) // remove 'Stars:', 'Actor:', etc.
-                    .filter(Boolean) :
-                    [],
+                    .filter(Boolean) : [],
 
                 genre: processArray(req.body.genre),
                 movieLanguage: sanitizeString(req.body.movieLanguage),
@@ -173,12 +172,18 @@ router.get("/movies/:id", async(req, res) => {
         const allMovies = await Movie.find();
         const recommendations = MovieRecommendationEngine.getRecommendations(allMovies, movie);
 
-        res.render("details", { movie, recommendations });
+        // ✅ Convert movie to plain object
+        const movieData = movie.toObject();
+        // ✅ Convert qualityLinks Map to normal object
+        movieData.qualityLinks = Object.fromEntries(movie.qualityLinks);
+
+        res.render("details", { movie: movieData, recommendations }); // ✅ safe to render
     } catch (err) {
         console.error("❌ Movie details error:", err);
         res.render("error", { message: "Movie not found." });
     }
 });
+
 
 // ============================
 // 🎬 DOWNLOAD PAGE

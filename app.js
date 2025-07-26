@@ -406,7 +406,14 @@ app.get("/movies/:id", async(req, res) => {
             ],
         }).limit(6);
 
-        res.render("details", { movie, suggestions });
+        // ✅ Fix: Convert movie to plain object
+        const movieData = movie.toObject();
+
+        // ✅ Fix: Convert qualityLinks Map to normal object
+        movieData.qualityLinks = Object.fromEntries(movie.qualityLinks);
+
+        res.render("details", { movie: movieData, suggestions });
+
     } catch (err) {
         console.error("❌ Error loading movie details:", err);
         res.status(500).render("error", { message: "Something went wrong" });

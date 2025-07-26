@@ -34,13 +34,15 @@ const movieSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        minlength: 2,
-        maxlength: 200,
         validate: {
-            validator: title => /^[a-zA-Z0-9\s\-\:\.\!\?]+$/.test(title),
-            message: 'Title contains invalid characters'
-        }
+            validator: function(v) {
+                return /^[\w\s():+\-–—.,'&/]+$/.test(v); // ✅ More flexible
+            },
+            message: 'Title contains invalid characters',
+        },
     },
+
+
     description: {
         type: String,
         required: true,
@@ -80,17 +82,12 @@ const movieSchema = new mongoose.Schema({
         required: true,
         enum: ['English', 'Hindi', 'Spanish', 'French', 'German', 'Italian', 'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic', 'Other']
     },
-    quality: {
-        type: [String],
-        required: true,
-        validate: {
-            validator: qualities => {
-                const validQualities = ['480p', '720p', '1080p', '4K', 'HDR'];
-                return qualities.length > 0 && qualities.every(q => validQualities.includes(q));
-            },
-            message: 'Invalid quality selection'
-        }
+    qualityLinks: {
+        type: Map,
+        of: String,
+        default: {}
     },
+
     poster: {
         type: String,
         required: true,
