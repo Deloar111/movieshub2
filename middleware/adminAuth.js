@@ -1,8 +1,21 @@
-// middleware/adminAuth.js
+// middleware/adminAuth.js - SIMPLIFIED AND FIXED VERSION
 export default function adminAuth(req, res, next) {
-    const adminSecret = process.env.ADMIN_SECRET || "8892";
-    const querySecret = req.query.admin;
+    try {
+        // Check if admin query parameter is present and correct
+        const isAdmin = req.query.admin === "8892";
 
-    res.locals.isAdmin = querySecret === adminSecret;
-    next();
+        // Set admin status in response locals
+        res.locals.isAdmin = isAdmin;
+
+        // Log admin status for debugging
+        if (isAdmin) {
+            console.log("👨‍💼 Admin access granted");
+        }
+
+        next();
+    } catch (error) {
+        console.error("❌ AdminAuth middleware error:", error);
+        res.locals.isAdmin = false;
+        next();
+    }
 }

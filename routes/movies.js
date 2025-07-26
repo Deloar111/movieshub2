@@ -1,497 +1,203 @@
 import express from "express";
-import mongoose from "mongoose";
 import Movie from "../models/movies.js";
 import adminAuth from "../middleware/adminAuth.js";
+import { body, validationResult } from "express-validator";
+import NodeCache from "node-cache";
 
 const router = express.Router();
+const cache = new NodeCache({ stdTTL: 3600 });
 
 // ============================
-// 🧠 ADVANCED RECOMMENDATION ALGORITHM
+// 🧠 ADVANCED RECOMMENDATION ENGINE
 // ============================
 class MovieRecommendationEngine {
-    // Calculate similarity score between two movies
     static calculateSimilarity(movie1, movie2) {
         let score = 0;
 
-        // Genre similarity (40% weight)
-        const genreIntersection = movie1.genre.filter(g => movie2.genre.includes(g));
-        const genreUnion = [...new Set([...movie1.genre, ...movie2.genre])];
-        const genreScore = genreIntersection.length / genreUnion.length;
-        score += genreScore * 0.4;
+        const genre1 = movie1.genre || [];
+        const genre2 = movie2.genre || [];
+        const genreIntersection = genre1.filter(genre => genre2.includes(genre));
+        score += (genreIntersection.length / (genre1.length || 1)) * 40;
 
-        // Language similarity (30% weight)
-        const languageScore = movie1.movieLanguage === movie2.movieLanguage ? 1 : 0;
-        score += languageScore * 0.3;
+        const yearDiff = Math.abs(movie1.year - movie2.year);
+        score += Math.max(0, 30 - yearDiff);
 
-        // Cast similarity (20% weight)
-        const castIntersection = movie1.cast.filter(c => movie2.cast.includes(c));
-        const castUnion = [...new Set([...movie1.cast, ...movie2.cast])];
-        const castScore = castUnion.length > 0 ? castIntersection.length / castUnion.length : 0;
-        score += castScore * 0.2;
-
-        // Quality similarity (10% weight)
-        const qualityIntersection = movie1.quality.filter(q => movie2.quality.includes(q));
-        const qualityUnion = [...new Set([...movie1.quality, ...movie2.quality])];
-        const qualityScore = qualityUnion.length > 0 ? qualityIntersection.length / qualityUnion.length : 0;
-        score += qualityScore * 0.1;
+        const titleWords1 = movie1.title.toLowerCase().split(" ");
+        const titleWords2 = movie2.title.toLowerCase().split(" ");
+        const commonWords = titleWords1.filter(word => titleWords2.includes(word));
+        score += (commonWords.length / titleWords1.length) * 30;
 
         return score;
     }
 
-    // Get personalized recommendations
-    static async getRecommendations(targetMovie, limit = 6) {
-        try {
-            // Get all movies except the target
-            const allMovies = await Movie.find({ _id: { $ne: targetMovie._id } });
-
-            // Calculate similarity scores
-            const recommendations = allMovies.map(movie => ({
-                movie,
-                similarity: this.calculateSimilarity(targetMovie, movie)
-            }));
-
-            // Sort by similarity score (descending) and return top results
-            return recommendations
-                .sort((a, b) => b.similarity - a.similarity)
-                .slice(0, limit)
-                .map(rec => rec.movie);
-        } catch (error) {
-            console.error("Error in recommendation engine:", error);
-            return [];
-        }
+    static getRecommendations(allMovies, targetMovie) {
+        return allMovies
+            .filter(m => m._id.toString() !== targetMovie._id.toString())
+            .map(m => ({ movie: m, score: this.calculateSimilarity(targetMovie, m) }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 6)
+            .map(entry => entry.movie);
     }
 }
 
 // ============================
-// 🔍 INPUT VALIDATION ALGORITHMS
+// 📺 GET ALL MOVIES (CACHED)
 // ============================
-class MovieValidator {
-    static validateScreenshots(screenshots) {
-        const validScreenshots = Array.isArray(screenshots) ?
-            screenshots.filter(s => this.isValidUrl(s.trim())) :
-            screenshots && this.isValidUrl(screenshots.trim()) ? [screenshots.trim()] : [];
-
-        return {
-            isValid: validScreenshots.length >= 3,
-            screenshots: validScreenshots,
-            error: validScreenshots.length < 3 ? "Please provide at least 3 valid screenshot URLs" : null
-        };
+router.get("/", async(req, res) => {
+    const cacheKey = req.originalUrl;
+    if (cache.has(cacheKey)) {
+        return res.render("home", { movies: cache.get(cacheKey), query: "" });
     }
 
-    static isValidUrl(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch (_) {
-            return false;
-        }
-    }
-
-    static sanitizeArray(input) {
-        if (!input) return [];
-
-        // Handle both string and array inputs
-        let arrayInput;
-        if (typeof input === 'string') {
-            arrayInput = input.split(",");
-        } else if (Array.isArray(input)) {
-            arrayInput = input;
-        } else {
-            return [];
-        }
-
-        return arrayInput
-            .map(s => s.toString().trim())
-            .filter(s => s.length > 0)
-            .map(s => this.sanitizeString(s));
-    }
-
-    static sanitizeString(input) {
-        if (!input) return '';
-        return input.toString().replace(/[<>]/g, "").trim();
-    }
-
-    static validateMovieData(body) {
-        const errors = [];
-
-        if (!body.title || body.title.trim().length < 2) {
-            errors.push("Title must be at least 2 characters long");
-        }
-
-        if (!body.description || body.description.trim().length < 10) {
-            errors.push("Description must be at least 10 characters long");
-        }
-
-        if (!body.poster || !this.isValidUrl(body.poster)) {
-            errors.push("Valid poster URL is required");
-        }
-
-        const screenshotValidation = this.validateScreenshots(body.screenshots);
-        if (!screenshotValidation.isValid) {
-            errors.push(screenshotValidation.error);
-        }
-
-        // Validate genre - ensure it matches schema enum values
-        const validGenres = [
-            'Action', 'Adventure', 'Comedy', 'Drama', 'Horror',
-            'Romance', 'Sci-Fi', 'Thriller', 'Documentary', 'Animation',
-            'Fantasy', 'Crime', 'Mystery', 'War', 'Western', 'Musical',
-            'Biography', 'Family', 'Sport', 'History'
-        ];
-
-        const genreArray = this.sanitizeArray(body.genre);
-        const invalidGenres = genreArray.filter(g => !validGenres.includes(g));
-        if (invalidGenres.length > 0) {
-            errors.push(`Invalid genres: ${invalidGenres.join(', ')}. Valid genres are: ${validGenres.join(', ')}`);
-        }
-
-        // Validate quality
-        const validQualities = ['480p', '720p', '1080p', '4K', 'HDR'];
-        const qualityArray = this.sanitizeArray(body.quality);
-        const invalidQualities = qualityArray.filter(q => !validQualities.includes(q));
-        if (invalidQualities.length > 0) {
-            errors.push(`Invalid qualities: ${invalidQualities.join(', ')}. Valid qualities are: ${validQualities.join(', ')}`);
-        }
-
-        // Validate language
-        const validLanguages = ['English', 'Hindi', 'Spanish', 'French', 'German', 'Italian',
-            'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic', 'Other'
-        ];
-        if (!validLanguages.includes(body.movieLanguage)) {
-            errors.push(`Invalid language: ${body.movieLanguage}. Valid languages are: ${validLanguages.join(', ')}`);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors,
-            sanitizedData: {
-                title: this.sanitizeString(body.title),
-                description: this.sanitizeString(body.description),
-                poster: body.poster,
-                cast: this.sanitizeArray(body.cast),
-                genre: genreArray.filter(g => validGenres.includes(g)), // Only include valid genres
-                quality: qualityArray.filter(q => validQualities.includes(q)), // Only include valid qualities
-                movieLanguage: this.sanitizeString(body.movieLanguage),
-                screenshots: screenshotValidation.screenshots,
-                qualityLinks: body.qualityLinks || {}
-            }
-        };
-    }
-}
-
-// ============================
-// 💾 CACHING LAYER
-// ============================
-class CacheManager {
-    constructor() {
-        this.cache = new Map();
-        this.ttl = 5 * 60 * 1000; // 5 minutes TTL
-    }
-
-    get(key) {
-        const item = this.cache.get(key);
-        if (!item) return null;
-
-        if (Date.now() > item.expiry) {
-            this.cache.delete(key);
-            return null;
-        }
-
-        return item.data;
-    }
-
-    set(key, data) {
-        this.cache.set(key, {
-            data,
-            expiry: Date.now() + this.ttl
-        });
-    }
-
-    clear() {
-        this.cache.clear();
-    }
-}
-
-const cache = new CacheManager();
-
-// ============================
-// 📄 STATIC PAGES ROUTES
-// ============================
-router.get("/about", (req, res) => {
-    res.render("about");
-});
-
-router.get("/privacy", (req, res) => {
-    res.render("privacy");
-});
-
-// ============================
-// 🔐 ENHANCED ADMIN: ADD MOVIE
-// ============================
-router.post("/admin/add", adminAuth, async(req, res) => {
     try {
-        console.log("Received movie data:", req.body); // Debug log
-
-        const validation = MovieValidator.validateMovieData(req.body);
-
-        if (!validation.isValid) {
-            console.log("Validation errors:", validation.errors); // Debug log
-            return res.status(400).json({
-                success: false,
-                errors: validation.errors
-            });
-        }
-
-        console.log("Sanitized data:", validation.sanitizedData); // Debug log
-
-        const newMovie = await Movie.create(validation.sanitizedData);
-
-        // Clear cache after adding new movie
-        cache.clear();
-
-        res.redirect("/?admin=8892");
+        const movies = await Movie.find().sort({ createdAt: -1 }).limit(20);
+        cache.set(cacheKey, movies);
+        res.render("home", { movies, query: "" });
     } catch (err) {
-        console.error("❌ Error adding movie:", err);
-        res.status(500).json({
-            success: false,
-            error: err.message,
-            stack: err.stack
-        });
+        console.error("❌ Fetch movies error:", err);
+        res.render("error", { message: "Something went wrong!" });
     }
 });
 
 // ============================
-// 🎬 MOVIE DETAILS WITH VALIDATION
+// 🔍 SEARCH
 // ============================
-router.get("/:id", async(req, res) => {
+router.get("/search", async(req, res) => {
+    const query = req.query.q || "";
+    const regex = new RegExp(query, "i");
     try {
-        const movieId = req.params.id;
+        const movies = await Movie.find({
+            $or: [
+                { title: regex },
+                { genre: regex },
+                { description: regex }
+            ]
+        }).sort({ createdAt: -1 });
 
-        // Handle favicon request
-        if (movieId === 'favicon.ico') {
-            return res.status(204).end();
-        }
-
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(404).render("error", {
-                message: "Invalid movie ID",
-                statusCode: 404
-            });
-        }
-
-        const cacheKey = `movie_details_${movieId}`;
-
-        // Check cache first
-        let cachedData = cache.get(cacheKey);
-        if (cachedData) {
-            return res.render("details", cachedData);
-        }
-
-        // Fetch movie with error handling
-        const movie = await Movie.findById(movieId);
-        if (!movie) {
-            return res.status(404).render("error", {
-                message: "Movie not found",
-                statusCode: 404
-            });
-        }
-
-        // Increment view count
-        await movie.incrementViews();
-
-        // Get smart recommendations
-        const suggestions = await MovieRecommendationEngine.getRecommendations(movie, 6);
-
-        const renderData = { movie, suggestions };
-
-        // Cache the result
-        cache.set(cacheKey, renderData);
-
-        res.render("details", renderData);
+        res.render("home", { movies, query });
     } catch (err) {
-        console.error("Error loading movie details:", err);
-        res.status(500).render("error", {
-            message: "Internal Server Error",
-            statusCode: 500
-        });
+        res.render("error", { message: "Search error." });
     }
 });
 
 // ============================
-// ⬇️ ENHANCED DOWNLOAD PAGE
+// ➕ ADD MOVIE (GET)
 // ============================
-router.get("/download/:id", async(req, res) => {
-    try {
-        const movieId = req.params.id;
+router.get("/admin/add", adminAuth, (req, res) => {
+    res.render("add", { errors: [], success: null });
+});
 
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(404).render("error", {
-                message: "Invalid movie ID",
-                statusCode: 404
-            });
+// ============================
+// ➕ ADD MOVIE (POST)
+// ============================
+router.post(
+    "/admin/add",
+    adminAuth, [
+        body("title").notEmpty().withMessage("Title is required."),
+        body("year").isInt().withMessage("Year must be a number."),
+        body("poster").isURL().withMessage("Poster must be a valid URL."),
+        body("downloadLinks.480p").optional().isURL().withMessage("480p link must be a valid URL.")
+    ],
+    async(req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.render("add", { errors: errors.array(), success: null });
         }
 
-        const cacheKey = `movie_download_${movieId}`;
+        try {
+            console.log("📝 Received form data:", req.body);
 
-        let movie = cache.get(cacheKey);
-        if (!movie) {
-            movie = await Movie.findById(movieId);
-            if (!movie) {
-                return res.status(404).render("error", {
-                    message: "Movie not found",
-                    statusCode: 404
-                });
+            const sanitizeString = value => (value && typeof value === 'string' ? value.trim() : "");
+            const sanitizeNumber = (value, fallback = 0) => {
+                const parsed = parseInt(value, 10);
+                return isNaN(parsed) ? fallback : Math.max(0, parsed);
+            };
+            const sanitizeYear = value => {
+                const year = parseInt(value, 10);
+                const currentYear = new Date().getFullYear();
+                if (isNaN(year) || year < 1900 || year > currentYear + 5) {
+                    throw new Error("Invalid year provided");
+                }
+                return year;
+            };
+
+            const processArray = field => (!field ? [] : Array.isArray(field) ? field : [field]);
+
+            const movieData = {
+                title: sanitizeString(req.body.title),
+                year: sanitizeYear(req.body.year),
+                views: sanitizeNumber(req.body.views),
+                downloads: sanitizeNumber(req.body.downloads),
+                description: sanitizeString(req.body.description),
+                cast: req.body.cast ?
+                    req.body.cast
+                    .split(",")
+                    .map(c => c.replace(/^.*?:/, "").trim()) // remove 'Stars:', 'Actor:', etc.
+                    .filter(Boolean) :
+                    [],
+
+                genre: processArray(req.body.genre),
+                movieLanguage: sanitizeString(req.body.movieLanguage),
+                quality: processArray(req.body.quality),
+                poster: sanitizeString(req.body.poster),
+                screenshots: processArray(req.body.screenshots).filter(s => s && s.trim()),
+                qualityLinks: typeof req.body.qualityLinks === 'object' ? req.body.qualityLinks : {}
+            };
+
+            if (!movieData.title || !movieData.description || !movieData.poster || !movieData.movieLanguage || movieData.genre.length === 0 || movieData.screenshots.length < 3) {
+                throw new Error("Missing required movie fields");
             }
-            cache.set(cacheKey, movie);
+
+            const movie = new Movie(movieData);
+            const savedMovie = await movie.save();
+
+            console.log("✅ Movie saved successfully:", savedMovie._id);
+            cache.flushAll();
+
+            res.render("add", { errors: [], success: "🎉 Movie added successfully!" });
+        } catch (err) {
+            console.error("❌ Movie save error:", err);
+            res.render("add", { errors: [{ msg: `Error saving movie: ${err.message}` }], success: null });
         }
+    }
+);
 
-        // Increment download count
-        await movie.incrementDownloads();
+// ============================
+// 📃 MOVIE DETAILS + RECOMMENDATIONS
+// ============================
+router.get("/movies/:id", async(req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) return res.render("error", { message: "Movie not found." });
 
+        const allMovies = await Movie.find();
+        const recommendations = MovieRecommendationEngine.getRecommendations(allMovies, movie);
+
+        res.render("details", { movie, recommendations });
+    } catch (err) {
+        console.error("❌ Movie details error:", err);
+        res.render("error", { message: "Movie not found." });
+    }
+});
+
+// ============================
+// 🎬 DOWNLOAD PAGE
+// ============================
+router.get("/movies/download/:id", async(req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) return res.render("error", { message: "Movie not found." });
         res.render("download", { movie });
     } catch (err) {
-        console.error("Error loading download page:", err);
-        res.status(500).render("error", {
-            message: "Internal Server Error",
-            statusCode: 500
-        });
+        console.error("❌ Download page error:", err);
+        res.render("error", { message: "Download page error." });
     }
 });
 
 // ============================
-// ✏️ ENHANCED ADMIN: EDIT MOVIE
+// 🌐 ABOUT + POLICY
 // ============================
-router.get("/admin/edit/:id", adminAuth, async(req, res) => {
-    try {
-        const movieId = req.params.id;
-
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(404).render("error", {
-                message: "Invalid movie ID",
-                statusCode: 404
-            });
-        }
-
-        const movie = await Movie.findById(movieId);
-        if (!movie) {
-            return res.status(404).render("error", {
-                message: "Movie not found",
-                statusCode: 404
-            });
-        }
-
-        res.render("edit", { movie });
-    } catch (err) {
-        console.error("Error loading edit page:", err);
-        res.status(500).render("error", {
-            message: "Internal Server Error",
-            statusCode: 500
-        });
-    }
-});
-
-router.post("/admin/edit/:id", adminAuth, async(req, res) => {
-    try {
-        const movieId = req.params.id;
-
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(400).json({
-                success: false,
-                error: "Invalid movie ID"
-            });
-        }
-
-        const validation = MovieValidator.validateMovieData(req.body);
-
-        if (!validation.isValid) {
-            return res.status(400).json({
-                success: false,
-                errors: validation.errors
-            });
-        }
-
-        await Movie.findByIdAndUpdate(movieId, validation.sanitizedData);
-
-        // Clear cache after updating
-        cache.clear();
-
-        res.redirect("/?admin=8892");
-    } catch (err) {
-        console.error("Error updating movie:", err);
-        res.status(500).json({
-            success: false,
-            error: "Failed to update movie"
-        });
-    }
-});
-
-// ============================
-// ❌ ENHANCED ADMIN: DELETE MOVIE
-// ============================
-router.get("/admin/delete/:id", adminAuth, async(req, res) => {
-    try {
-        const movieId = req.params.id;
-
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(404).json({
-                success: false,
-                error: "Invalid movie ID"
-            });
-        }
-
-        const deletedMovie = await Movie.findByIdAndDelete(movieId);
-
-        if (!deletedMovie) {
-            return res.status(404).json({
-                success: false,
-                error: "Movie not found"
-            });
-        }
-
-        // Clear cache after deletion
-        cache.clear();
-
-        res.redirect("/?admin=8892");
-    } catch (err) {
-        console.error("Error deleting movie:", err);
-        res.status(500).json({
-            success: false,
-            error: "Failed to delete movie"
-        });
-    }
-});
-
-// ============================
-// 🔍 NEW: SEARCH & FILTER ENDPOINTS
-// ============================
-router.get("/api/search", async(req, res) => {
-    try {
-        const { q, genre, language, quality } = req.query;
-        let query = {};
-
-        if (q) {
-            query.$or = [
-                { title: { $regex: q, $options: 'i' } },
-                { description: { $regex: q, $options: 'i' } },
-                { cast: { $in: [new RegExp(q, 'i')] } }
-            ];
-        }
-
-        if (genre) query.genre = { $in: [genre] };
-        if (language) query.movieLanguage = language;
-        if (quality) query.quality = { $in: [quality] };
-
-        const movies = await Movie.find(query).limit(20);
-        res.json({ success: true, movies });
-    } catch (err) {
-        console.error("Search error:", err);
-        res.status(500).json({ success: false, error: "Search failed" });
-    }
-});
+router.get("/about-us", (req, res) => res.render("about"));
+router.get("/privacy-policy", (req, res) => res.render("privacy"));
 
 export default router;
