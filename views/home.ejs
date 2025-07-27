@@ -203,12 +203,7 @@
                     </div>
                 </div>
 
-                <!-- Navigation pills -->
-                <nav class="hidden md:flex space-x-2">
-                    <a href="/" class="px-2 py-1 rounded-full glass hover:bg-white/10 transition-all duration-300">Home</a>
-                    <a href="/movies" class="px-4 py-2 rounded-full glass hover:bg-white/10 transition-all duration-300">Movies</a>
-                    <a href="/series" class="px-4 py-2 rounded-full glass hover:bg-white/10 transition-all duration-300">Series</a>
-                </nav>
+
 
                 <!-- Mobile menu button -->
                 <button class="md:hidden p-2 rounded-lg glass" id="mobile-menu-btn" aria-label="Toggle menu">
@@ -218,313 +213,304 @@
                 </button>
             </div>
 
-            <!-- Mobile navigation -->
-            <nav class="md:hidden mt-4 hidden" id="mobile-menu">
-                <div class="flex flex-col space-y-2">
-                    <a href="/" class="px-2 py-1 rounded-lg glass hover:bg-white/10 transition-all duration-300">Home</a>
-                    <a href="/movies" class="px-4 py-2 rounded-lg glass hover:bg-white/10 transition-all duration-300">Movies</a>
-                    <a href="/series" class="px-4 py-2 rounded-lg glass hover:bg-white/10 transition-all duration-300">Series</a>
-                </div>
-            </nav>
-        </div>
-    </header>
 
-    <!-- Main Section -->
-    <main class="max-w-7xl mx-auto px-1 py-2 relative z-4">
-        <!-- Admin Add Button -->
-        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-            <div class="mb-8">
-                <a href="/admin/add?admin=8892" class="magnetic-btn inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-400 hover:to-emerald-500 neon-glow font-semibold space-x-2">
-                    <span class="text-xl">➕</span>
-                    <span>Add Movie</span>
-                </a>
-            </div>
-            <% } %>
 
-                <!-- Enhanced Search Bar -->
-                <form method="GET" class="mb-1">
-                    <div class="relative max-w-2xl mx-auto">
-                        <div class="absolute inset-0 gradient-bg rounded-2xl blur opacity-30"></div>
-                        <div class="relative glass rounded-2xl p-1">
-                            <div class="flex">
-                                <input type="text" name="search" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" placeholder="Search movies, series, actors..." class="flex-1 px- py- bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg">
-                                <button type="submit" class="magnetic-btn px-3 py-2 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 rounded-xl font-medium transition-all duration-300">
+            <!-- Main Section -->
+            <main class="max-w-7xl mx-auto px-1 py-2 relative z-4">
+                <!-- Admin Add Button -->
+                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                    <div class="mb-8">
+                        <a href="/admin/add?admin=8892" class="magnetic-btn inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-400 hover:to-emerald-500 neon-glow font-semibold space-x-2">
+                            <span class="text-xl">➕</span>
+                            <span>Add Movie</span>
+                        </a>
+                    </div>
+                    <% } %>
+
+                        <!-- Enhanced Search Bar -->
+                        <form method="GET" class="mb-1">
+                            <div class="relative max-w-2xl mx-auto">
+                                <div class="absolute inset-0 gradient-bg rounded-2xl blur opacity-30"></div>
+                                <div class="relative glass rounded-2xl p-1">
+                                    <div class="flex">
+                                        <input type="text" name="search" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" placeholder="Search movies, series, actors..." class="flex-1 px- py- bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg">
+                                        <button type="submit" class="magnetic-btn px-3 py-2 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 rounded-xl font-medium transition-all duration-300">
                             🔍
                         </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </form>
+                        </form>
 
-                <!-- Modern Category Pills -->
-                <div class="flex flex-wrap justify-center gap-3 mb-4">
-                    <% 
+                        <!-- Modern Category Pills -->
+                        <div class="flex flex-wrap justify-center gap-0  mb-3">
+                            <% 
             const categories = ["All Movies", "Web Series", "South Hindi Dubbed", "Bollywood", "Hollywood Hindi"];
             const currentCategory = typeof category !== 'undefined' ? category : '';
             %>
-                        <% categories.forEach(cat => { %>
-                            <a href="/?category=<%= encodeURIComponent(cat) %>" class="ripple px-4 py-2 text-sm rounded-full transition-all duration-300 font-medium <%= currentCategory === cat ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
-                                <%= cat %>
-                            </a>
-                            <% }) %>
-                </div>
-
-                <!-- Trending Section -->
-                <% if (typeof trendingMovies !== 'undefined' && trendingMovies && trendingMovies.length > 0) { %>
-                    <section class="mb-0">
-                        <div class="flex items-center space-x- mb- ">
-                            <h2 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-                                🔥 Trending Now
-                            </h2>
-                            <div class="flex-1 h-px bg-gradient-to-r from-red-500/50 to-transparent"></div>
-                        </div>
-
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                            <% trendingMovies.forEach(movie => { %>
-                                <div class="movie-card glass-dark rounded-2xl overflow-hidden group">
-                                    <a href="/movies/<%= movie._id %>" class="block" aria-label="View <%= movie.title %>">
-                                        <div class="relative overflow-hidden">
-                                            <img src="<%= movie.poster %>" alt="<%= movie.title %> poster" class="w-full h-48 md:h-64 object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                            <div class="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full pulse-glow">
-                                                🔥 HOT
-                                            </div>
-                                        </div>
-                                        <div class="p-3 md:p-4">
-                                            <h3 class="font-bold text-sm md:text-lg text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all duration-300 line-clamp-2">
-                                                <%= movie.title %>
-                                            </h3>
-                                        </div>
+                                <% categories.forEach(cat => { %>
+                                    <a href="/?category=<%= encodeURIComponent(cat) %>" class="ripple px-4 py-2 text-sm rounded-full transition-all duration-300 font-medium <%= currentCategory === cat ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
+                                        <%= cat %>
                                     </a>
-                                </div>
-                                <% }) %>
+                                    <% }) %>
                         </div>
-                    </section>
-                    <% } %>
 
-                        <!-- All Movies Grid -->
-                        <section class="mb-16">
-                            <div class="flex items-center space-x-4 mb-8">
-                                <h2 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                                    🎬 All Movies
-                                </h2>
-                                <div class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"></div>
-                            </div>
-
-                            <% if (typeof movies === 'undefined' || movies.length === 0) { %>
-                                <div class="text-center py-20">
-                                    <div class="text-6xl md:text-8xl mb-4">😢</div>
-                                    <p class="text-xl md:text-2xl text-gray-400 mb-4">No movies found</p>
-                                    <p class="text-gray-500">Try adjusting your search or filters</p>
+                        <!-- Trending Section -->
+                        <% if (typeof trendingMovies !== 'undefined' && trendingMovies && trendingMovies.length > 0) { %>
+                            <section class="mb-0">
+                                <div class="flex items-center space-x- mb- ">
+                                    <h2 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
+                                        🔥 Trending Now
+                                    </h2>
+                                    <div class="flex-1 h-px bg-gradient-to-r from-red-500/50 to-transparent"></div>
                                 </div>
-                                <% } else { %>
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-                                        <% movies.forEach(movie => { %>
-                                            <div class="movie-card glass-dark rounded-2xl overflow-hidden group">
-                                                <a href="/movies/<%= movie._id %>" class="block" aria-label="View <%= movie.title %>">
-                                                    <div class="relative overflow-hidden">
-                                                        <img src="<%= movie.poster %>" alt="<%= movie.title %> poster" class="w-full h-48 md:h-64 object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-110" loading="lazy">
-                                                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                                                        <!-- Quality badges -->
-                                                        <% if (movie.quality && movie.quality.length > 0) { %>
-                                                            <div class="absolute top-3 left-3 flex flex-wrap gap-1">
-                                                                <% movie.quality.forEach((q, index) => { %>
-                                                                    <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                                    <% trendingMovies.forEach(movie => { %>
+                                        <div class="movie-card glass-dark rounded-2xl overflow-hidden group">
+                                            <a href="/movies/<%= movie._id %>" class="block" aria-label="View <%= movie.title %>">
+                                                <div class="relative overflow-hidden">
+                                                    <img src="<%= movie.poster %>" alt="<%= movie.title %> poster" class="w-full h-48 md:h-64 object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+                                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                                    <div class="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full pulse-glow">
+                                                        🔥 HOT
+                                                    </div>
+                                                </div>
+                                                <div class="p-3 md:p-4">
+                                                    <h3 class="font-bold text-sm md:text-lg text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all duration-300 line-clamp-2">
+                                                        <%= movie.title %>
+                                                    </h3>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                            </section>
+                            <% } %>
+
+                                <!-- All Movies Grid -->
+                                <section class="mb-16">
+                                    <div class="flex items-center space-x-4 mb-8">
+                                        <h2 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                                            🎬 All Movies
+                                        </h2>
+                                        <div class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"></div>
+                                    </div>
+
+                                    <% if (typeof movies === 'undefined' || movies.length === 0) { %>
+                                        <div class="text-center py-20">
+                                            <div class="text-6xl md:text-8xl mb-4">😢</div>
+                                            <p class="text-xl md:text-2xl text-gray-400 mb-4">No movies found</p>
+                                            <p class="text-gray-500">Try adjusting your search or filters</p>
+                                        </div>
+                                        <% } else { %>
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+                                                <% movies.forEach(movie => { %>
+                                                    <div class="movie-card glass-dark rounded-2xl overflow-hidden group">
+                                                        <a href="/movies/<%= movie._id %>" class="block" aria-label="View <%= movie.title %>">
+                                                            <div class="relative overflow-hidden">
+                                                                <img src="<%= movie.poster %>" alt="<%= movie.title %> poster" class="w-full h-48 md:h-64 object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-110" loading="lazy">
+                                                                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                                                <!-- Quality badges -->
+                                                                <% if (movie.quality && movie.quality.length > 0) { %>
+                                                                    <div class="absolute top-3 left-3 flex flex-wrap gap-1">
+                                                                        <% movie.quality.forEach((q, index) => { %>
+                                                                            <span class="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                                                     <%= q %>
                                                 </span>
-                                                                    <% }) %>
+                                                                            <% }) %>
+                                                                    </div>
+                                                                    <% } %>
+                                                            </div>
+
+                                                            <div class="p-3 md:p-4">
+                                                                <h3 class="font-bold text-sm md:text-base mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all duration-300 line-clamp-2">
+                                                                    <%= movie.title %>
+                                                                </h3>
+
+                                                                <% if (movie.movieLanguage) { %>
+                                                                    <div class="flex items-center space-x-2 text-xs text-gray-400 mb-2">
+                                                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                                                        <span><%= movie.movieLanguage %></span>
+                                                                    </div>
+                                                                    <% } %>
+                                                            </div>
+                                                        </a>
+
+                                                        <!-- Admin controls -->
+                                                        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                                            <div class="px-3 md:px-4 pb-3 md:pb-4 flex space-x-3">
+                                                                <a href="/admin/edit/<%= movie._id %>?admin=8892" class="flex items-center space-x-1 text-yellow-400 hover:text-yellow-300 text-xs transition-colors">
+                                                                    <span>✏️</span>
+                                                                    <span>Edit</span>
+                                                                </a>
+                                                                <a href="/admin/delete/<%= movie._id %>?admin=8892" class="flex items-center space-x-1 text-red-400 hover:text-red-300 text-xs transition-colors" onclick="return confirm('Are you sure you want to delete this movie?')">
+                                                                    <span>🗑️</span>
+                                                                    <span>Delete</span>
+                                                                </a>
                                                             </div>
                                                             <% } %>
                                                     </div>
-
-                                                    <div class="p-3 md:p-4">
-                                                        <h3 class="font-bold text-sm md:text-base mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text transition-all duration-300 line-clamp-2">
-                                                            <%= movie.title %>
-                                                        </h3>
-
-                                                        <% if (movie.movieLanguage) { %>
-                                                            <div class="flex items-center space-x-2 text-xs text-gray-400 mb-2">
-                                                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                                                <span><%= movie.movieLanguage %></span>
-                                                            </div>
-                                                            <% } %>
-                                                    </div>
-                                                </a>
-
-                                                <!-- Admin controls -->
-                                                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                                                    <div class="px-3 md:px-4 pb-3 md:pb-4 flex space-x-3">
-                                                        <a href="/admin/edit/<%= movie._id %>?admin=8892" class="flex items-center space-x-1 text-yellow-400 hover:text-yellow-300 text-xs transition-colors">
-                                                            <span>✏️</span>
-                                                            <span>Edit</span>
-                                                        </a>
-                                                        <a href="/admin/delete/<%= movie._id %>?admin=8892" class="flex items-center space-x-1 text-red-400 hover:text-red-300 text-xs transition-colors" onclick="return confirm('Are you sure you want to delete this movie?')">
-                                                            <span>🗑️</span>
-                                                            <span>Delete</span>
-                                                        </a>
-                                                    </div>
-                                                    <% } %>
+                                                    <% }) %>
                                             </div>
-                                            <% }) %>
-                                    </div>
-                                    <% } %>
-                        </section>
+                                            <% } %>
+                                </section>
 
-                        <!-- Enhanced Pagination -->
-                        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-                            <div class="flex justify-center items-center space-x-2 mb-8 flex-wrap gap-2">
-                                <% 
+                                <!-- Enhanced Pagination -->
+                                <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                                    <div class="flex justify-center items-center space-x-2 mb-8 flex-wrap gap-2">
+                                        <% 
                 const currentPageNum = typeof currentPage !== 'undefined' ? currentPage : 1;
                 const searchParam = typeof searchQuery !== 'undefined' && searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '';
                 const categoryParam = typeof category !== 'undefined' && category ? '&category=' + encodeURIComponent(category) : '';
                 %>
 
-                                    <% for (let i = 1; i <= totalPages; i++) { %>
-                                        <a href="?page=<%= i %><%= searchParam %><%= categoryParam %>" class="magnetic-btn px-3 md:px-4 py-2 md:py-3 rounded-xl font-semibold transition-all duration-300 <%= currentPageNum === i ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
-                                            <%= i %>
-                                        </a>
-                                        <% } %>
-                            </div>
-                            <% } %>
-    </main>
+                                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                                <a href="?page=<%= i %><%= searchParam %><%= categoryParam %>" class="magnetic-btn px-3 md:px-4 py-2 md:py-3 rounded-xl font-semibold transition-all duration-300 <%= currentPageNum === i ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white neon-glow' : 'glass hover:glass-dark hover:scale-105' %>">
+                                                    <%= i %>
+                                                </a>
+                                                <% } %>
+                                    </div>
+                                    <% } %>
+            </main>
 
-    <!-- Enhanced Footer -->
-    <footer class="relative mt-20">
-        <div class="absolute inset-0 gradient-bg opacity-10"></div>
-        <div class="relative glass-dark backdrop-blur-xl">
-            <div class="max-w-7xl mx-auto px-4 py-12">
-                <div class="grid md:grid-cols-3 gap-8 mb-8">
-                    <div>
-                        <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            M0viEsHUB
-                        </h3>
-                        <p class="text-gray-400">Your ultimate destination for movies and entertainment.</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold mb-4 text-white">Quick Links</h4>
-                        <div class="space-y-2">
-                            <a href="/about-us" class="block text-gray-400 hover:text-purple-400 transition-colors">About Us</a>
-                            <a href="/privacy-policy" class="block text-gray-400 hover:text-purple-400 transition-colors">Privacy Policy</a>
-                            <a href="/dmca" class="block text-gray-400 hover:text-purple-400 transition-colors">DMCA</a>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold mb-4 text-white">Connect</h4>
-                        <div class="flex space-x-4">
-                            <a href="mailto:deloarhossen81722@gmail.com" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Email us">
+            <!-- Enhanced Footer -->
+            <footer class="relative mt-20">
+                <div class="absolute inset-0 gradient-bg opacity-10"></div>
+                <div class="relative glass-dark backdrop-blur-xl">
+                    <div class="max-w-7xl mx-auto px-4 py-12">
+                        <div class="grid md:grid-cols-3 gap-8 mb-8">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                    M0viEsHUB
+                                </h3>
+                                <p class="text-gray-400">Your ultimate destination for movies and entertainment.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-4 text-white">Quick Links</h4>
+                                <div class="space-y-2">
+                                    <a href="/about-us" class="block text-gray-400 hover:text-purple-400 transition-colors">About Us</a>
+                                    <a href="/privacy-policy" class="block text-gray-400 hover:text-purple-400 transition-colors">Privacy Policy</a>
+                                    <a href="/dmca" class="block text-gray-400 hover:text-purple-400 transition-colors">DMCA</a>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-4 text-white">Connect</h4>
+                                <div class="flex space-x-4">
+                                    <a href="mailto:deloarhossen81722@gmail.com" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Email us">
                                 📧
                             </a>
-                            <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Contact us">
+                                    <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Contact us">
                                 📱
                             </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-white/10 pt-8 text-center">
+                            <p class="text-gray-400">
+                                &copy;
+                                <%= new Date().getFullYear() %> M0viEsHUB. All rights reserved.
+                                    <span class="text-purple-400">Made with ❤️</span>
+                            </p>
                         </div>
                     </div>
                 </div>
+            </footer>
 
-                <div class="border-t border-white/10 pt-8 text-center">
-                    <p class="text-gray-400">
-                        &copy;
-                        <%= new Date().getFullYear() %> M0viEsHUB. All rights reserved.
-                            <span class="text-purple-400">Made with ❤️</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Mobile menu toggle
+                    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                    const mobileMenu = document.getElementById('mobile-menu');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Mobile menu toggle
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-
-            if (mobileMenuBtn && mobileMenu) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                });
-            }
-
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth'
+                    if (mobileMenuBtn && mobileMenu) {
+                        mobileMenuBtn.addEventListener('click', function() {
+                            mobileMenu.classList.toggle('hidden');
                         });
                     }
-                });
-            });
 
-            // Image loading optimization
-            const images = document.querySelectorAll('img');
-            images.forEach(img => {
-                if (img.complete && img.naturalHeight !== 0) {
-                    img.classList.add('loaded');
-                } else {
-                    img.addEventListener('load', function() {
-                        this.classList.add('loaded');
-                        this.classList.remove('skeleton');
+                    // Smooth scroll for anchor links
+                    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                        anchor.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const target = document.querySelector(this.getAttribute('href'));
+                            if (target) {
+                                target.scrollIntoView({
+                                    behavior: 'smooth'
+                                });
+                            }
+                        });
                     });
 
-                    img.addEventListener('error', function() {
-                        this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
-                        this.classList.add('loaded');
+                    // Image loading optimization
+                    const images = document.querySelectorAll('img');
+                    images.forEach(img => {
+                        if (img.complete && img.naturalHeight !== 0) {
+                            img.classList.add('loaded');
+                        } else {
+                            img.addEventListener('load', function() {
+                                this.classList.add('loaded');
+                                this.classList.remove('skeleton');
+                            });
+
+                            img.addEventListener('error', function() {
+                                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                                this.classList.add('loaded');
+                            });
+
+                            // Add skeleton while loading
+                            if (!img.classList.contains('loaded')) {
+                                img.classList.add('skeleton');
+                            }
+                        }
                     });
 
-                    // Add skeleton while loading
-                    if (!img.classList.contains('loaded')) {
-                        img.classList.add('skeleton');
+                    // Parallax effect for background elements (throttled for performance)
+                    let ticking = false;
+
+                    function updateParallax() {
+                        const scrolled = window.pageYOffset;
+                        const rate = scrolled * -0.5;
+
+                        document.querySelectorAll('.float').forEach(el => {
+                            el.style.transform = `translateY(${rate}px)`;
+                        });
+                        ticking = false;
                     }
-                }
-            });
 
-            // Parallax effect for background elements (throttled for performance)
-            let ticking = false;
+                    window.addEventListener('scroll', function() {
+                        if (!ticking) {
+                            requestAnimationFrame(updateParallax);
+                            ticking = true;
+                        }
+                    });
 
-            function updateParallax() {
-                const scrolled = window.pageYOffset;
-                const rate = scrolled * -0.5;
+                    // Intersection Observer for lazy loading animations
+                    const observerOptions = {
+                        threshold: 0.1,
+                        rootMargin: '0px 0px -50px 0px'
+                    };
 
-                document.querySelectorAll('.float').forEach(el => {
-                    el.style.transform = `translateY(${rate}px)`;
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.style.opacity = '1';
+                                entry.target.style.transform = 'translateY(0)';
+                            }
+                        });
+                    }, observerOptions);
+
+                    // Observe movie cards for entrance animations
+                    document.querySelectorAll('.movie-card').forEach(card => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                        observer.observe(card);
+                    });
                 });
-                ticking = false;
-            }
-
-            window.addEventListener('scroll', function() {
-                if (!ticking) {
-                    requestAnimationFrame(updateParallax);
-                    ticking = true;
-                }
-            });
-
-            // Intersection Observer for lazy loading animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-
-            // Observe movie cards for entrance animations
-            document.querySelectorAll('.movie-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(card);
-            });
-        });
-    </script>
+            </script>
 </body>
 
 </html>
