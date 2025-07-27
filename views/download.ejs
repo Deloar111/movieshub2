@@ -224,6 +224,18 @@
                                             <div class="text-2xl">⬇️</div>
                                         </a>
                                         <% } %>
+                                            <% if (movie.qualityLinks && movie.qualityLinks["4K"]) { %>
+                                                <a href="<%= movie.qualityLinks['4K'] %>" target="_blank" class="download-btn flex items-center justify-between w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg">
+                                                    <div class="flex items-center">
+                                                        <span class="text-2xl mr-3">🖥️</span>
+                                                        <div class="text-left">
+                                                            <div class="text-lg font-bold">4k Quality</div>
+                                                            <div class="text-sm opacity-90">~3.5-5.5 GB</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-2xl">⬇️</div>
+                                                </a>
+                                                <% } %>
                 </div>
 
                 <!-- Additional Info -->

@@ -45,10 +45,8 @@ const connectDB = async() => {
         const mongoUrl = process.env.MONGO_URL ||
             "mongodb+srv://deloarhossen:8PwxJE5xWkALIPK@watchview.x1xjpmm.mongodb.net/watchview?retryWrites=true&w=majority&appName=watchview";
 
-        await mongoose.connect(mongoUrl, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(mongoUrl);
+
         console.log("✅ MongoDB Connected Successfully");
 
         // Test the connection with a simple query

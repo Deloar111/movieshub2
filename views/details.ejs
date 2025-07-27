@@ -186,6 +186,15 @@
                                             <div class="text-sm opacity-90">~1.5-2.5 GB</div>
                                         </a>
                                         <% } %>
+                                            <% let quality4k = movie.qualityLinks?.['4K'] || movie.qualityLinks?.['4k']; %>
+                                                <% if (quality4k) { %>
+                                                    <a href="/movies/download/<%= movie._id %>?quality=<%= movie.qualityLinks['4K'] ? '4K' : '4k' %>" class="download-btn bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-6 rounded-xl text-center block">
+                                                        <div class="text-lg mb-1">📺 4K</div>
+                                                        <div class="text-sm opacity-90">~3.5-5.5 GB</div>
+                                                    </a>
+                                                    <% } %>
+
+
                 </div>
 
                 <div class="text-center mt-6">
@@ -194,6 +203,8 @@
                     </p>
                 </div>
             </div>
+
+
 
             <!-- Screenshots Section -->
             <% if (movie.screenshots && movie.screenshots.length > 0) { %>
