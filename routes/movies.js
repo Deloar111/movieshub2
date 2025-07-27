@@ -204,5 +204,5 @@ router.get("/movies/download/:id", async(req, res) => {
 // ============================
 router.get("/about-us", (req, res) => res.render("about"));
 router.get("/privacy-policy", (req, res) => res.render("privacy"));
-router.get("/dmca", (req, res) => res.render("DMCA"));
+router.get("/dmca", (req, res) => res.render("dmca"));
 export default router;

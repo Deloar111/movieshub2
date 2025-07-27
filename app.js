@@ -454,7 +454,7 @@ app.get("/privacy-policy", (req, res) => {
     res.render("privacy");
 });
 app.get("/dmca", (req, res) => {
-    res.render("DMCA");
+    res.render("dmca");
 });
 
 // ============================
