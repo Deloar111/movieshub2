@@ -139,7 +139,10 @@ router.post(
                 movieLanguage: sanitizeString(req.body.movieLanguage),
                 quality: processArray(req.body.quality),
                 poster: sanitizeString(req.body.poster),
-                screenshots: processArray(req.body.screenshots).filter(s => s && s.trim()),
+                screenshots: processArray(req.body.screenshots)
+                    .map(s => typeof s === "string" ? s.trim() : "")
+                    .filter(s => s.length > 0),
+
                 qualityLinks: typeof req.body.qualityLinks === 'object' ? req.body.qualityLinks : {}
             };
 
@@ -160,6 +163,32 @@ router.post(
         }
     }
 );
+router.get("/admin/edit/:id", adminAuth, async(req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) return res.status(404).send("Movie not found");
+
+        res.render("edit", { movie });
+    } catch (err) {
+        console.error("Edit load error:", err);
+        res.status(500).send("Server error");
+    }
+});
+router.post("/admin/edit/:id", adminAuth, async(req, res) => {
+    try {
+        const updatedData = {
+            title: req.body.title,
+            description: req.body.description,
+            // include other fields
+        };
+
+        await Movie.findByIdAndUpdate(req.params.id, updatedData);
+        res.redirect("/admin");
+    } catch (err) {
+        console.error("Edit save error:", err);
+        res.status(500).send("Server error");
+    }
+});
 
 // ============================
 // 📃 MOVIE DETAILS + RECOMMENDATIONS

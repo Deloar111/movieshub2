@@ -10,84 +10,301 @@
 
 <body class="bg-gray-950 text-white min-h-screen p-6 font-sans">
 
-    <div class="max-w-3xl mx-auto bg-gray-900 p-8 rounded-xl shadow-md">
+    <div class="max-w-4xl mx-auto bg-gray-900 p-8 rounded-xl shadow-md">
         <h1 class="text-3xl font-bold text-center mb-8 text-green-400">✏️ Edit Movie</h1>
 
-        <form action="/admin/edit/<%= movie._id %>?admin=8892" method="POST" class="space-y-5">
+        <form action="/admin/edit/<%= movie._id %>?admin=8892" method="POST" class="space-y-6">
 
             <!-- Title -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Title</label>
-                <input type="text" name="title" value="<%= movie.title %>" required class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <label class="block text-sm font-semibold mb-2">Title *</label>
+                <input type="text" name="title" value="<%- movie.title %>" required class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+
+            <!-- Year -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Year *</label>
+                <input type="number" name="year" value="<%- movie.year || '' %>" required class="w-full p-3 bg-gray-800 rounded border border-gray-700" min="1900" max="2030" />
+            </div>
+
+            <!-- Views and Downloads -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Views</label>
+                    <input type="number" name="views" value="<%- movie.views || 0 %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" min="0" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Downloads</label>
+                    <input type="number" name="downloads" value="<%- movie.downloads || 0 %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" min="0" />
+                </div>
             </div>
 
             <!-- Description -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Description</label>
-                <textarea name="description" rows="4" class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"><%= movie.description %></textarea>
+                <label class="block text-sm font-semibold mb-2">Description *</label>
+                <textarea name="description" rows="4" required maxlength="2000" class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"><%- movie.description || '' %></textarea>
             </div>
 
-            <!-- Cast, Genre, Language, Quality -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Cast (comma separated)</label>
-                    <input type="text" name="cast" value="<%= movie.cast.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+            <!-- Cast -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Cast (comma separated)</label>
+                <input type="text" name="cast" value="<%- (movie.cast || []).join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+            </div>
+
+            <!-- Genre -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Genre *</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <% const movieGenres = movie.genre || []; %>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Web Series" <%= movieGenres.includes('Web Series') ? 'checked' : '' %> class="mr-2"> Web Series
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="South Hindi Dubbed" <%= movieGenres.includes('South Hindi Dubbed') ? 'checked' : '' %> class="mr-2"> South Hindi Dubbed
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Bollywood" <%= movieGenres.includes('Bollywood') ? 'checked' : '' %> class="mr-2"> Bollywood
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Hollywood Hindi" <%= movieGenres.includes('Hollywood Hindi') ? 'checked' : '' %> class="mr-2"> Hollywood Hindi
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Action" <%= movieGenres.includes('Action') ? 'checked' : '' %> class="mr-2"> Action
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Adventure" <%= movieGenres.includes('Adventure') ? 'checked' : '' %> class="mr-2"> Adventure
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Comedy" <%= movieGenres.includes('Comedy') ? 'checked' : '' %> class="mr-2"> Comedy
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Drama" <%= movieGenres.includes('Drama') ? 'checked' : '' %> class="mr-2"> Drama
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Horror" <%= movieGenres.includes('Horror') ? 'checked' : '' %> class="mr-2"> Horror
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Romance" <%= movieGenres.includes('Romance') ? 'checked' : '' %> class="mr-2"> Romance
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Sci-Fi" <%= movieGenres.includes('Sci-Fi') ? 'checked' : '' %> class="mr-2"> Sci-Fi
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Thriller" <%= movieGenres.includes('Thriller') ? 'checked' : '' %> class="mr-2"> Thriller
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Documentary" <%= movieGenres.includes('Documentary') ? 'checked' : '' %> class="mr-2"> Documentary
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Animation" <%= movieGenres.includes('Animation') ? 'checked' : '' %> class="mr-2"> Animation
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Fantasy" <%= movieGenres.includes('Fantasy') ? 'checked' : '' %> class="mr-2"> Fantasy
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Crime" <%= movieGenres.includes('Crime') ? 'checked' : '' %> class="mr-2"> Crime
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Mystery" <%= movieGenres.includes('Mystery') ? 'checked' : '' %> class="mr-2"> Mystery
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="War" <%= movieGenres.includes('War') ? 'checked' : '' %> class="mr-2"> War
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Western" <%= movieGenres.includes('Western') ? 'checked' : '' %> class="mr-2"> Western
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Musical" <%= movieGenres.includes('Musical') ? 'checked' : '' %> class="mr-2"> Musical
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Biography" <%= movieGenres.includes('Biography') ? 'checked' : '' %> class="mr-2"> Biography
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Family" <%= movieGenres.includes('Family') ? 'checked' : '' %> class="mr-2"> Family
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="Sport" <%= movieGenres.includes('Sport') ? 'checked' : '' %> class="mr-2"> Sport
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="genre" value="History" <%= movieGenres.includes('History') ? 'checked' : '' %> class="mr-2"> History
+                    </label>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Genre (comma separated)</label>
-                    <input type="text" name="genre" value="<%= movie.genre.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Language</label>
-                    <input type="text" name="movieLanguage" value="<%= movie.movieLanguage %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Quality (comma separated)</label>
-                    <input type="text" name="quality" value="<%= movie.quality.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+            </div>
+
+            <!-- Language -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Movie Language *</label>
+                <select name="movieLanguage" required class="w-full p-3 bg-gray-800 rounded border border-gray-700">
+                    <option value="">Select Language</option>
+                    <option value="English" <%= movie.movieLanguage === 'English' ? 'selected' : '' %>>English</option>
+                    <option value="Hindi" <%= movie.movieLanguage === 'Hindi' ? 'selected' : '' %>>Hindi</option>
+                    <option value="Spanish" <%= movie.movieLanguage === 'Spanish' ? 'selected' : '' %>>Spanish</option>
+                    <option value="French" <%= movie.movieLanguage === 'French' ? 'selected' : '' %>>French</option>
+                    <option value="German" <%= movie.movieLanguage === 'German' ? 'selected' : '' %>>German</option>
+                    <option value="Italian" <%= movie.movieLanguage === 'Italian' ? 'selected' : '' %>>Italian</option>
+                    <option value="Japanese" <%= movie.movieLanguage === 'Japanese' ? 'selected' : '' %>>Japanese</option>
+                    <option value="Korean" <%= movie.movieLanguage === 'Korean' ? 'selected' : '' %>>Korean</option>
+                    <option value="Chinese" <%= movie.movieLanguage === 'Chinese' ? 'selected' : '' %>>Chinese</option>
+                    <option value="Russian" <%= movie.movieLanguage === 'Russian' ? 'selected' : '' %>>Russian</option>
+                    <option value="Arabic" <%= movie.movieLanguage === 'Arabic' ? 'selected' : '' %>>Arabic</option>
+                    <option value="Other" <%= movie.movieLanguage === 'Other' ? 'selected' : '' %>>Other</option>
+                </select>
+            </div>
+
+            <!-- Quality -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Available Qualities *</label>
+                <div class="flex flex-wrap gap-4">
+                    <% const movieQualities = movie.quality || []; %>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="quality" value="480p" <%= movieQualities.includes('480p') ? 'checked' : '' %> class="mr-2"> 480p
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="quality" value="720p" <%= movieQualities.includes('720p') ? 'checked' : '' %> class="mr-2"> 720p
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="quality" value="1080p" <%= movieQualities.includes('1080p') ? 'checked' : '' %> class="mr-2"> 1080p
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="quality" value="4K" <%= movieQualities.includes('4K') ? 'checked' : '' %> class="mr-2"> 4K
+                    </label>
+                        <label class="flex items-center">
+                        <input type="checkbox" name="quality" value="HDR" <%= movieQualities.includes('HDR') ? 'checked' : '' %> class="mr-2"> HDR
+                    </label>
                 </div>
             </div>
 
             <!-- Poster -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Poster URL</label>
-                <input type="url" name="poster" value="<%= movie.poster %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                <label class="block text-sm font-semibold mb-2">Poster URL *</label>
+                <input type="url" name="poster" value="<%- movie.poster || '' %>" required class="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" />
             </div>
 
             <!-- Screenshots -->
             <div>
-                <label class="block text-sm font-semibold mb-1">Screenshots (comma separated URLs)</label>
-                <input type="text" name="screenshots" value="<%= movie.screenshots.join(', ') %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                <label class="block text-sm font-semibold mb-2">Screenshots * (at least 3)</label>
+                <div id="screenshotsContainer" class="space-y-2">
+                    <% const screenshots = movie.screenshots || []; %>
+                        <% for(let i = 0; i < Math.max(4, screenshots.length); i++) { %>
+                            <input type="url" name="screenshots" value="<%- screenshots[i] || '' %>" placeholder="Screenshot <%= i + 1 %> URL" class="w-full p-3 bg-gray-800 rounded border border-gray-700" <%=i < 3 ? 'required' : '' %> />
+                            <% } %>
+                </div>
+                <button type="button" id="addScreenshot" class="text-blue-400 hover:text-blue-300 mt-2">+ Add More Screenshots</button>
             </div>
 
             <!-- Download Links -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-1">480p Link</label>
-                    <input type="url" name="qualityLinks[480p]" value="<%= movie.qualityLinks[" 480p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">720p Link</label>
-                    <input type="url" name="qualityLinks[720p]" value="<%= movie.qualityLinks[" 720p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">1080p Link</label>
-                    <input type="url" name="qualityLinks[1080p]" value="<%= movie.qualityLinks[" 1080p "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Other Link</label>
-                    <input type="url" name="qualityLinks[other]" value="<%= movie.qualityLinks[" other "] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
-                </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Download Links</h3>
+                <% const qLinks = movie.qualityLinks || {}; %>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">480p Download Link</label>
+                            <input type="url" name="qualityLinks[480p]" value="<%- qLinks['480p'] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">720p Download Link</label>
+                            <input type="url" name="qualityLinks[720p]" value="<%- qLinks['720p'] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">1080p Download Link</label>
+                            <input type="url" name="qualityLinks[1080p]" value="<%- qLinks['1080p'] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">4K Download Link</label>
+                            <input type="url" name="qualityLinks[4K]" value="<%- qLinks['4K'] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">HDR Download Link</label>
+                            <input type="url" name="qualityLinks[HDR]" value="<%- qLinks['HDR'] || '' %>" class="w-full p-3 bg-gray-800 rounded border border-gray-700" />
+                        </div>
+                    </div>
             </div>
 
-            <!-- Submit Button -->
-            <div class="text-center mt-6">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition">
-                    💾 Save Changes
-                </button>
+            <!-- Buttons -->
+            <div class="flex justify-end space-x-4">
+                <a href="/?admin=8892" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</a>
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Update Movie</button>
             </div>
         </form>
     </div>
 
+    <!-- JavaScript -->
+    <script>
+        // Add screenshot functionality
+        document.getElementById('addScreenshot').addEventListener('click', function() {
+            const container = document.getElementById('screenshotsContainer');
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.name = 'screenshots';
+            input.placeholder = 'Screenshot URL';
+            input.className = 'w-full p-3 bg-gray-800 rounded border border-gray-700';
+            container.appendChild(input);
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const genres = document.querySelectorAll('input[name="genre"]:checked');
+            const qualities = document.querySelectorAll('input[name="quality"]:checked');
+            const screenshots = document.querySelectorAll('input[name="screenshots"]');
+            const movieLanguage = document.querySelector('select[name="movieLanguage"]').value;
+            const title = document.querySelector('input[name="title"]').value.trim();
+            const description = document.querySelector('textarea[name="description"]').value.trim();
+            const poster = document.querySelector('input[name="poster"]').value.trim();
+
+            let validScreens = 0;
+            screenshots.forEach(ss => {
+                if (ss.value.trim()) validScreens++;
+            });
+
+            // Validation checks
+            if (!title) {
+                alert("Please enter movie title.");
+                e.preventDefault();
+                return;
+            }
+
+            if (!description || description.length < 10) {
+                alert("Please enter a description with at least 10 characters.");
+                e.preventDefault();
+                return;
+            }
+
+            if (!poster) {
+                alert("Please enter poster URL.");
+                e.preventDefault();
+                return;
+            }
+
+            if (!movieLanguage) {
+                alert("Please select movie language.");
+                e.preventDefault();
+                return;
+            }
+
+            if (genres.length === 0) {
+                alert("Please select at least one genre.");
+                e.preventDefault();
+                return;
+            }
+
+            if (qualities.length === 0) {
+                alert("Please select at least one quality.");
+                e.preventDefault();
+                return;
+            }
+
+            if (validScreens < 3) {
+                alert("Please provide at least 3 screenshot URLs.");
+                e.preventDefault();
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.textContent = 'Updating Movie...';
+            submitBtn.disabled = true;
+        });
+    </script>
 </body>
 
 </html>
