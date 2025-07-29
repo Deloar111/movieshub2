@@ -11,176 +11,192 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-
-    <link rel="icon" type="image/png" href="/favicon.png" />
-
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+        /* Resize the Google search box */
         
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
+        .gcse-search {
+            transform: scale(0.75);
+            /* Resize to 75% */
+            transform-origin: top left;
         }
-        /* Glassmorphism effects */
+        /* Optional: Center it or push it to side */
         
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .glass-dark {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        /* Animated gradients */
-        
-        .gradient-bg {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-        
-        @keyframes gradientShift {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-        /* Neon glow effects */
-        
-        .neon-glow {
-            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
-            transition: all 0.3s ease;
-        }
-        
-        .neon-glow:hover {
-            box-shadow: 0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.4);
-        }
-        /* Movie card hover effects */
-        
-        .movie-card {
-            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        .movie-card:hover {
-            transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
-        }
-        /* Floating animation */
-        
-        .float {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-        /* Pulse animation */
-        
-        .pulse-glow {
-            animation: pulseGlow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes pulseGlow {
-            from {
-                box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
-            }
-            to {
-                box-shadow: 0 0 40px rgba(239, 68, 68, 1), 0 0 80px rgba(239, 68, 68, 0.5);
-            }
-        }
-        /* Scrollbar styling */
-        
-         ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-         ::-webkit-scrollbar-track {
-            background: #1f1f1f;
-        }
-        
-         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #9333ea, #ec4899);
-            border-radius: 10px;
-        }
-        /* Ripple effect */
-        
-        .ripple {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .ripple::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .ripple:hover::before {
-            left: 100%;
-        }
-        /* Loading skeleton */
-        
-        .skeleton {
-            background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        
-        @keyframes loading {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-        /* Magnetic button effect */
-        
-        .magnetic-btn {
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        }
-        
-        .magnetic-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-        }
-        /* Image loading optimization */
-        
-        img {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        img.loaded {
-            opacity: 1;
-        }
-        /* Responsive improvements */
-        
-        @media (max-width: 768px) {
-            .movie-card:hover {
-                transform: none;
-                box-shadow: none;
-            }
+        .gcse-search {
+            margin: 10px auto;
+            display: block;
+            width: fit-content;
         }
     </style>
+</head>
+<link rel="icon" type="image/png" href="/favicon.png" />
+
+<style>
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+    /* Glassmorphism effects */
+    
+    .glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-dark {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    /* Animated gradients */
+    
+    .gradient-bg {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0%,
+        100% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+    /* Neon glow effects */
+    
+    .neon-glow {
+        box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+        transition: all 0.3s ease;
+    }
+    
+    .neon-glow:hover {
+        box-shadow: 0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.4);
+    }
+    /* Movie card hover effects */
+    
+    .movie-card {
+        transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .movie-card:hover {
+        transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+    }
+    /* Floating animation */
+    
+    .float {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+    /* Pulse animation */
+    
+    .pulse-glow {
+        animation: pulseGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes pulseGlow {
+        from {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+        }
+        to {
+            box-shadow: 0 0 40px rgba(239, 68, 68, 1), 0 0 80px rgba(239, 68, 68, 0.5);
+        }
+    }
+    /* Scrollbar styling */
+    
+     ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+     ::-webkit-scrollbar-track {
+        background: #1f1f1f;
+    }
+    
+     ::-webkit-scrollbar-thumb {
+        background: linear-gradient(45deg, #9333ea, #ec4899);
+        border-radius: 10px;
+    }
+    /* Ripple effect */
+    
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .ripple:hover::before {
+        left: 100%;
+    }
+    /* Loading skeleton */
+    
+    .skeleton {
+        background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+    /* Magnetic button effect */
+    
+    .magnetic-btn {
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    }
+    
+    .magnetic-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
+    /* Image loading optimization */
+    
+    img {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    img.loaded {
+        opacity: 1;
+    }
+    /* Responsive improvements */
+    
+    @media (max-width: 768px) {
+        .movie-card:hover {
+            transform: none;
+            box-shadow: none;
+        }
+    }
+</style>
 </head>
 
 <body class="bg-gradient-to-br from-gray-900 via-black to-purple-900 text-white min-h-screen">
