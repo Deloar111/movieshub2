@@ -1,0 +1,8 @@
+Movie.watch().on('change', async (data) => {
+    if (data.operationType === 'insert') {
+        const movie = data.fullDocument;
+        const msg = `🎬 New Movie: ${movie.title}\n📅 Year: ${movie.year}\n📥 Download: ${movie.downloadLink}`;
+        console.log("📨 Sending Telegram message:", msg); // ← Add this
+        await bot.sendMessage(chatId, msg);
+    }
+});

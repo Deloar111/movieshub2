@@ -39,6 +39,7 @@
     </style>
 </head>
 
+
 <body class="text-white">
     <nav class="glass w-full z-50 px-4 py-2">
         <a href="/" class="text-lg font-bold text-red-400">🎬 M0viE MODs</a>
@@ -145,7 +146,22 @@
                 </div>
             </div>
             <% } %>
+                <!-- ✅ Share on WhatsApp -->
+                <a target="_blank" href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(`🎬 *${movie.title}*\n👥 ${movie.cast.join(', ')}\n🎭 ${movie.genre.join(', ')}\n📥 Download Now:\nhttps://your-domain.com/movies/${movie.slug}`) %>">
+                    <button class="mt-2 bg-green-500 text-white px-4 py-2 rounded">
+   📲 Share on WhatsApp
+   </button>
+                </a>
 
+                <script>
+                    function copyShareMessage() {
+                        const text = document.getElementById("shareMessage");
+                        text.select();
+                        text.setSelectionRange(0, 99999);
+                        document.execCommand("copy");
+                        alert("Copied to clipboard ✅");
+                    }
+                </script>
                 <!-- Similar Movies -->
                 <% if (suggestions && suggestions.length > 0) { %>
                     <div class="glass w-full p-3">
@@ -193,5 +209,6 @@
         });
     </script>
 </body>
+
 
 </html>
