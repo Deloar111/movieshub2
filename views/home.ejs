@@ -4,179 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movies Mod ,Download Movies - Latest Bollywood, Hollywood & South Indianletest movies - Watch & Download </title>
+    <title>M0viEsHUB - Watch & Download</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-
-</head>
-<link rel="icon" type="image/png" href="/favicon.png" />
-
-<style>
-    * {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .font-mono {
-        font-family: 'JetBrains Mono', monospace;
-    }
-    /* Glassmorphism effects */
-    
-    .glass {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .glass-dark {
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    /* Animated gradients */
-    
-    .gradient-bg {
-        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-        background-size: 400% 400%;
-        animation: gradientShift 15s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-        0%,
-        100% {
-            background-position: 0% 50%;
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
         }
-        50% {
-            background-position: 100% 50%;
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
         }
-    }
-    /* Neon glow effects */
-    
-    .neon-glow {
-        box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
-        transition: all 0.3s ease;
-    }
-    
-    .neon-glow:hover {
-        box-shadow: 0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.4);
-    }
-    /* Movie card hover effects */
-    
-    .movie-card {
-        transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    
-    .movie-card:hover {
-        transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
-    }
-    /* Floating animation */
-    
-    .float {
-        animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%,
-        100% {
-            transform: translateY(0px);
+        /* Glassmorphism effects */
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        50% {
-            transform: translateY(-20px);
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-    }
-    /* Pulse animation */
-    
-    .pulse-glow {
-        animation: pulseGlow 2s ease-in-out infinite alternate;
-    }
-    
-    @keyframes pulseGlow {
-        from {
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+        /* Animated gradients */
+        
+        .gradient-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
         }
-        to {
-            box-shadow: 0 0 40px rgba(239, 68, 68, 1), 0 0 80px rgba(239, 68, 68, 0.5);
+        
+        @keyframes gradientShift {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
         }
-    }
-    /* Scrollbar styling */
-    
-     ::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-     ::-webkit-scrollbar-track {
-        background: #1f1f1f;
-    }
-    
-     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(45deg, #9333ea, #ec4899);
-        border-radius: 10px;
-    }
-    /* Ripple effect */
-    
-    .ripple {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .ripple::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .ripple:hover::before {
-        left: 100%;
-    }
-    /* Loading skeleton */
-    
-    .skeleton {
-        background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-    }
-    
-    @keyframes loading {
-        0% {
-            background-position: 200% 0;
+        /* Neon glow effects */
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+            transition: all 0.3s ease;
         }
-        100% {
-            background-position: -200% 0;
+        
+        .neon-glow:hover {
+            box-shadow: 0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.4);
         }
-    }
-    /* Magnetic button effect */
-    
-    .magnetic-btn {
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-    }
-    
-    .magnetic-btn:hover {
-        transform: translateY(-2px) scale(1.05);
-    }
-    /* Image loading optimization */
-    
-    img {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    img.loaded {
-        opacity: 1;
-    }
-    /* Responsive improvements */
-    
-    @media (max-width: 768px) {
+        /* Movie card hover effects */
+        
+        .movie-card {
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
         .movie-card:hover {
-            transform: none;
-            box-shadow: none;
+            transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
         }
-    }
-</style>
+        /* Floating animation */
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        /* Pulse animation */
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+            }
+            to {
+                box-shadow: 0 0 40px rgba(239, 68, 68, 1), 0 0 80px rgba(239, 68, 68, 0.5);
+            }
+        }
+        /* Scrollbar styling */
+        
+         ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+         ::-webkit-scrollbar-track {
+            background: #1f1f1f;
+        }
+        
+         ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border-radius: 10px;
+        }
+        /* Ripple effect */
+        
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .ripple:hover::before {
+            left: 100%;
+        }
+        /* Loading skeleton */
+        
+        .skeleton {
+            background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+        /* Magnetic button effect */
+        
+        .magnetic-btn {
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+        
+        .magnetic-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+        /* Image loading optimization */
+        
+        img {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        img.loaded {
+            opacity: 1;
+        }
+        /* Responsive improvements */
+        
+        @media (max-width: 768px) {
+            .movie-card:hover {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gradient-to-br from-gray-900 via-black to-purple-900 text-white min-h-screen">
@@ -196,7 +194,7 @@
                     <div class="relative">
                         <div class="absolute inset-0 gradient-bg rounded-lg blur opacity-75"></div>
                         <h1 class="relative text-xl font-bold text-white px-1 py- bg-black/50 rounded-md font-mono">
-                            🍿 M0viE MODs
+                            🍿 M0viEsS HUB
                         </h1>
                     </div>
                     <div class="hidden md:flex items-center space-x- text-sm text-gray-300">
@@ -205,10 +203,8 @@
                     </div>
                 </div>
 
-                <!-- Google Search at top -->
-                <script async src="https://cse.google.com/cse.js?cx=f30d19226127647e5">
-                </script>
-                <div class="gcse-search"></div>
+
+
                 <!-- Mobile menu button -->
                 <button class="md:hidden p-2 rounded-lg glass" id="mobile-menu-btn" aria-label="Toggle menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,45 +374,69 @@
                                     </div>
                                     <% } %>
             </main>
+            <!-- ✅ Google Site Verification -->
+            <meta name="google-site-verification" content="v2iHuSrzd7azbgv8jwXAUnlrMKSFW6CG4GqO94Td1W4" />
+
+            <!-- ✅ Tailwind and Google Fonts -->
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+            <!-- ✅ Google Search Engine Script -->
+            <script async src="https://cse.google.com/cse.js?cx=0114c655d977843bc"></script>
+
+            <!-- ✅ Google Search Box -->
+            <div class="gcse-search "></div>
+
+            <!-- ✅ Resize the Google Search Box -->
+            <style>
+                .gcse-search {
+                    transform: scale(0.6);
+                    /* Smaller size */
+                    transform-origin: top left;
+                    margin: 10px auto;
+                    display: block;
+                    width: fit-content;
+                }
+            </style>
 
             <!-- Enhanced Footer -->
-            <footer class="relative mt-20">
-                <div class="absolute inset-0 gradient-bg opacity-10"></div>
-                <div class="relative glass-dark backdrop-blur-xl">
-                    <div class="max-w-7xl mx-auto px-4 py-12">
-                        <div class="grid md:grid-cols-3 gap-8 mb-8">
+            <footer class="relative mt-20 ">
+                <div class="absolute inset-0 gradient-bg opacity-10 "></div>
+                <div class="relative glass-dark backdrop-blur-xl ">
+                    <div class="max-w-7xl mx-auto px-4 py-12 ">
+                        <div class="grid md:grid-cols-3 gap-8 mb-8 ">
                             <div>
-                                <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent ">
                                     M0viEsHUB
                                 </h3>
-                                <p class="text-gray-400">Your ultimate destination for movies and entertainment.</p>
+                                <p class="text-gray-400 ">Your ultimate destination for movies and entertainment.</p>
                             </div>
                             <div>
-                                <h4 class="font-semibold mb-4 text-white">Quick Links</h4>
-                                <div class="space-y-2">
-                                    <a href="/about-us" class="block text-gray-400 hover:text-purple-400 transition-colors">About Us</a>
-                                    <a href="/privacy-policy" class="block text-gray-400 hover:text-purple-400 transition-colors">Privacy Policy</a>
-                                    <a href="/dmca" class="block text-gray-400 hover:text-purple-400 transition-colors">DMCA</a>
+                                <h4 class="font-semibold mb-4 text-white ">Quick Links</h4>
+                                <div class="space-y-2 ">
+                                    <a href="/about-us " class="block text-gray-400 hover:text-purple-400 transition-colors ">About Us</a>
+                                    <a href="/privacy-policy " class="block text-gray-400 hover:text-purple-400 transition-colors ">Privacy Policy</a>
+                                    <a href="/dmca " class="block text-gray-400 hover:text-purple-400 transition-colors ">DMCA</a>
                                 </div>
                             </div>
                             <div>
-                                <h4 class="font-semibold mb-4 text-white">Connect</h4>
-                                <div class="flex space-x-4">
-                                    <a href="mailto:moviesshub.com@gmail.com" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Email us">
+                                <h4 class="font-semibold mb-4 text-white ">Connect</h4>
+                                <div class="flex space-x-4 ">
+                                    <a href="mailto:moviesshub.com@gmail.com " class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300 " aria-label="Email us ">
                                 📧
                             </a>
-                                    <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300" aria-label="Contact us">
+                                    <a href="# " class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-300 " aria-label="Contact us ">
                                 📱
                             </a>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="border-t border-white/10 pt-8 text-center">
-                            <p class="text-gray-400">
+                        <div class="border-t border-white/10 pt-8 text-center ">
+                            <p class="text-gray-400 ">
                                 &copy;
                                 <%= new Date().getFullYear() %> M0viEsHUB. All rights reserved.
-                                    <span class="text-purple-400">Made with ❤️</span>
+                                    <span class="text-purple-400 ">Made with ❤️</span>
                             </p>
                         </div>
                     </div>
@@ -436,7 +456,7 @@
                     }
 
                     // Smooth scroll for anchor links
-                    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    document.querySelectorAll('a[href^="# "]').forEach(anchor => {
                         anchor.addEventListener('click', function(e) {
                             e.preventDefault();
                             const target = document.querySelector(this.getAttribute('href'));
@@ -515,27 +535,6 @@
                     });
                 });
             </script>
-            <!-- Google Site Verification -->
-            <meta name="google-site-verification" content="v2iHuSrzd7azbgv8jwXAUnlrMKSFW6CG4GqO94Td1W4" />
-            <script src="https://cdn.tailwindcss.com"></script>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-            <style>
-                /* Resize the Google search box */
-                
-                .gcse-search {
-                    transform: scale(0.75);
-                    /* Resize to 75% */
-                    transform-origin: top left;
-                }
-                /* Optional: Center it or push it to side */
-                
-                .gcse-search {
-                    margin: 10px auto;
-                    display: block;
-                    width: fit-content;
-                }
-            </style>
 </body>
 
 </html>

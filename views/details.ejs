@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
         <%= movie.title %> - Movie Details</title>
+    <!-- 🌐 Open Graph Tags for WhatsApp/Facebook -->
+    <meta property="og:title" content="<%= movie.title %>" />
+    <meta property="og:description" content="<%= movie.description %>" />
+    <meta property="og:image" content="<%= movie.poster %>" />
+    <meta property="og:url" content="https://moviemods.onrender.com/movies/<%= movie.slug %>" />
+    <meta property="og:type" content="website" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -146,22 +153,19 @@
                 </div>
             </div>
             <% } %>
-                <!-- ✅ Share on WhatsApp -->
-                <a target="_blank" href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(`🎬 *${movie.title}*\n👥 ${movie.cast.join(', ')}\n🎭 ${movie.genre.join(', ')}\n📥 Download Now:\nhttps://moviemods.onrender.com/movies/${movie.slug}`) %>">
-                    <button class="mt-2 bg-green-500 text-white px-4 py-2 rounded">
-   📲 Share on WhatsApp
+                <!-- ✅ WhatsApp Share Button with Poster Link -->
+                <a target="_blank" href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(
+     `🎬 *${movie.title}*` + 
+     `\n👥 Cast: ${movie.cast.join(', ')}` + 
+     `\n🎭 Genre: ${movie.genre.join(', ')}` + 
+     `\n🖼️ Poster: ${movie.poster}` + 
+     `\n📥 Download:\nhttps://moviemods.onrender.com/movies/${movie.slug}`
+   ) %>">
+                    <button class="mt-4 bg-green-600 text-white px-4 py-2 rounded w-full">
+     📲 Share on WhatsApp
    </button>
                 </a>
 
-                <script>
-                    function copyShareMessage() {
-                        const text = document.getElementById("shareMessage");
-                        text.select();
-                        text.setSelectionRange(0, 99999);
-                        document.execCommand("copy");
-                        alert("Copied to clipboard ✅");
-                    }
-                </script>
                 <!-- Similar Movies -->
                 <% if (suggestions && suggestions.length > 0) { %>
                     <div class="glass w-full p-3">
