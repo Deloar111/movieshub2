@@ -1,4 +1,4 @@
-// app.js - FIXED VERSION WITH WORKING ADMIN AND OFFLINE SUPPORT
+// app.js - ENHANCED VERSION WITH 4 TELEGRAM BOTS AND OFFLINE SUPPORT
 import express from "express";
 import mongoose from "mongoose";
 import TelegramBot from 'node-telegram-bot-api';
@@ -101,7 +101,6 @@ function saveMoviesToFile() {
 }
 
 // Sync movies from MongoDB to backup file
-// Sync movies from MongoDB to backup file
 async function syncMoviesToFile() {
     try {
         if (isMongoConnected) {
@@ -109,7 +108,6 @@ async function syncMoviesToFile() {
             offlineMovies = mongoMovies.map(movie => ({
                 ...movie,
                 _id: movie._id.toString(),
-                // Fix: Just use the qualityLinks object directly, no need for Object.fromEntries
                 qualityLinks: movie.qualityLinks || {}
             }));
             saveMoviesToFile();
@@ -120,7 +118,7 @@ async function syncMoviesToFile() {
     }
 }
 
-// FIXED: Enhanced offline search function
+// ENHANCED: Offline search function
 function searchMoviesOffline(query) {
     if (!query || !query.trim()) {
         console.log('📋 Returning all offline movies (no search query)');
@@ -130,6 +128,11 @@ function searchMoviesOffline(query) {
     const searchTerm = query.toLowerCase().trim();
     console.log(`🔍 Searching offline movies for: "${searchTerm}"`);
     console.log(`📚 Total offline movies available: ${offlineMovies.length}`);
+
+    if (!Array.isArray(offlineMovies) || offlineMovies.length === 0) {
+        console.log('📚 No offline movies available');
+        return [];
+    }
 
     const results = offlineMovies.filter(movie => {
         if (!movie) return false;
@@ -161,11 +164,42 @@ function searchMoviesOffline(query) {
 }
 
 // ============================
-// 🤖 TELEGRAM BOT SETUP (ENHANCED)
+// 🤖 MULTI-BOT TELEGRAM SETUP (NEW ENHANCED VERSION)
 // ============================
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '7965399127:AAH_4SSjYKZshPMl1Cvouu9SS3naJpvi6m0';
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+
+// Bot configurations with your tokens
+const BOT_CONFIGS = [{
+        name: 'Movieshub',
+        username: '@Mhubsbot',
+        token: '7948443317:AAGbzpq__Bl3eNJd8J1xSf5XqcR1heITyhY',
+        description: 'Your go-to movie hub for the latest films!'
+    },
+    {
+        name: 'Moviemods',
+        username: '@Moviemodsbot',
+        token: '7682450259:AAHdtvmumVrOFWe4ytxqodh_1k-ooD9rHYk',
+        description: 'Modified movie experiences and premium content!'
+    },
+    {
+        name: 'Moveshub',
+        username: '@Movhubsbot',
+        token: '8371835477:AAFejQlDZhkS4muunXPRvi2mA-J8VGn8TxM',
+        description: 'Your central hub for all movie downloads!'
+    },
+    {
+        name: 'Movieshubbot',
+        username: '@movhubs_bot',
+        token: '7965399127:AAH_4SSjYKZshPMl1Cvouu9SS3naJpvi6m0',
+        description: 'Ultimate movie collection at your fingertips!'
+    }
+];
+
 const NOTIFICATION_CHAT_ID = 6375810452;
+const WEBSITE_URL = 'https://moviemods.onrender.com';
+
+// Store all bot instances
+let bots = [];
+let activeBots = [];
 
 // ============================
 // 🔧 MIDDLEWARE SETUP
@@ -196,7 +230,7 @@ app.get('/sitemap.xml', (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://moviemods.onrender.com/</loc>
+        <loc>${WEBSITE_URL}/</loc>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
     </url>
@@ -225,9 +259,8 @@ const connectDB = async() => {
         // Sync movies to backup file
         await syncMoviesToFile();
 
-        // Start bot watchers after DB connection
-        startBotWatcher();
-        startBotSearchListener();
+        // Start bot watchers and listeners after DB connection
+        await initializeAllBots();
 
     } catch (err) {
         console.error("❌ MongoDB Connection Error:", err.message);
@@ -238,111 +271,108 @@ const connectDB = async() => {
         const loaded = loadMoviesFromFile();
         console.log(`🔴 Using offline mode with backup file (${offlineMovies.length} movies loaded)`);
 
-        // Start bot search listener even in offline mode
-        startBotSearchListener();
+        // Start bots even in offline mode
+        await initializeAllBots();
     }
 };
 
 // ============================
-// 🤖 TELEGRAM BOT FUNCTIONS (ENHANCED)
+// 🤖 ENHANCED MULTI-BOT FUNCTIONS
 // ============================
 
-// Bot watcher for new movie notifications
-async function startBotWatcher() {
-    if (!isMongoConnected) {
-        console.log('🔴 MongoDB not connected - skipping bot watcher');
-        return;
+// Initialize all bots
+async function initializeAllBots() {
+    console.log(`🤖 Initializing ${BOT_CONFIGS.length} Telegram bots...`);
+
+    for (const config of BOT_CONFIGS) {
+        try {
+            const bot = new TelegramBot(config.token, { polling: true });
+
+            // Store bot info
+            const botInfo = {
+                ...config,
+                bot: bot,
+                isActive: false
+            };
+
+            bots.push(botInfo);
+
+            // Set up bot commands and handlers
+            await setupBotHandlers(botInfo);
+
+            console.log(`✅ Bot ${config.name} (${config.username}) initialized`);
+
+        } catch (error) {
+            console.error(`❌ Failed to initialize bot ${config.name}:`, error.message);
+        }
     }
 
-    try {
-        console.log('🤖 Starting Telegram bot watcher...');
-        await bot.sendMessage(NOTIFICATION_CHAT_ID, '🤖 Bot is now watching for new movies!');
-        console.log('✅ Telegram bot watcher is active');
+    console.log(`🎉 ${bots.length} bots initialized successfully`);
 
-        const changeStream = Movie.watch();
+    // Send status to notification channel
+    if (bots.length > 0) {
+        await sendMultiBotNotification('🤖 All Movie Bots are now active!');
+    }
 
-        changeStream.on('change', async(data) => {
-            console.log('📡 Database change detected:', data.operationType);
-
-            if (data.operationType === 'insert') {
-                const movie = data.fullDocument;
-                console.log(`🎬 New movie added: ${movie.title}`);
-
-                // Add to offline backup
-                const movieForBackup = {
-                    ...movie,
-                    _id: movie._id.toString(),
-                    qualityLinks: typeof movie.qualityLinks === 'object' ? movie.qualityLinks : {}
-
-                };
-                offlineMovies.push(movieForBackup);
-                saveMoviesToFile();
-
-                const link = `https://moviemods.onrender.com/movies/download/${movie._id}`;
-                const genre = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre || 'N/A';
-                const language = movie.movieLanguage || 'N/A';
-                const year = movie.year || 'N/A';
-                const title = movie.title || 'Untitled';
-
-                const caption = `🎬 *${title}*\n📅 Year: ${year}\n🎭 Genre: ${genre}\n🌐 Language: ${language}\n📥 [Download Movie](${link})`;
-
-                try {
-                    if (movie.poster && movie.poster.startsWith('http')) {
-                        await bot.sendPhoto(NOTIFICATION_CHAT_ID, movie.poster, {
-                            caption,
-                            parse_mode: 'Markdown'
-                        });
-                    } else {
-                        await bot.sendMessage(NOTIFICATION_CHAT_ID, caption, { parse_mode: 'Markdown' });
-                    }
-                    console.log(`✅ Telegram notification sent for: ${title}`);
-                } catch (err) {
-                    console.error('❌ Telegram send error:', err.message);
-                }
-            }
-        });
-
-        changeStream.on('error', (error) => {
-            console.error('❌ Change stream error:', error);
-        });
-
-    } catch (error) {
-        console.error('❌ Bot watcher error:', error.message);
+    // Set up new movie watcher if MongoDB is connected
+    if (isMongoConnected) {
+        await startMovieWatcher();
     }
 }
 
-// Enhanced bot search listener (works offline and online)
-async function startBotSearchListener() {
-    const mode = isMongoConnected ? 'Online' : 'Offline';
-    console.log(`🔍 Starting Telegram search listener in ${mode} mode...`);
+// Setup handlers for individual bot
+async function setupBotHandlers(botInfo) {
+    const { bot, name, username, description } = botInfo;
 
-    // Bot commands
-    bot.onText(/\/start/, (msg) => {
+    // Start command
+    bot.onText(/\/start/, async(msg) => {
         const chatId = msg.chat.id;
         const status = isMongoConnected ? '🟢 Online' : '🔴 Offline';
         const movieCount = isMongoConnected ? 'Loading...' : offlineMovies.length;
 
-        bot.sendMessage(chatId, `🎬 Movie Bot ${status}
+        const welcomeMessage = `🎬 Welcome to ${name}!\n${description}\n\n` +
+            `Status: ${status}\n` +
+            `Available Movies: ${movieCount}\n\n` +
+            `🔍 Just type a movie name to search\n` +
+            `📋 /list - Show recent movies\n` +
+            `ℹ️ /status - Check bot status\n` +
+            `🌐 /website - Visit our website\n\n` +
+            `Example: Type "Pushpa" or "RRR"`;
 
-Welcome! I can find movies for you!
+        try {
+            await bot.sendMessage(chatId, welcomeMessage, {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '🌐 Visit Website', url: WEBSITE_URL }],
+                        [{ text: '🔍 Search Movies', callback_data: 'search_help' }]
+                    ]
+                },
+                parse_mode: 'Markdown'
+            });
 
-🔍 Search: Just type a movie name
-📋 /list - Show available movies  
-ℹ️ /status - Check bot status
-🔄 /reconnect - Try reconnect (if offline)
-
-Available movies: ${movieCount}`, { parse_mode: 'Markdown' });
+            console.log(`📨 Welcome message sent via ${name} to ${chatId}`);
+        } catch (error) {
+            console.error(`❌ Error sending welcome message via ${name}:`, error.message);
+        }
     });
 
     // Status command
-    bot.onText(/\/status/, (msg) => {
+    bot.onText(/\/status/, async(msg) => {
         const chatId = msg.chat.id;
         const status = isMongoConnected ? '🟢 Online (MongoDB)' : '🔴 Offline (Backup file)';
         const movieCount = isMongoConnected ? 'Fetching...' : offlineMovies.length;
 
-        bot.sendMessage(chatId, `Bot Status: ${status}
-Movies available: ${movieCount}
-Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
+        const statusMessage = `🤖 Bot: ${name}\n` +
+            `Status: ${status}\n` +
+            `Movies Available: ${movieCount}\n` +
+            `Last Updated: ${new Date().toLocaleString()}\n` +
+            `Website: ${WEBSITE_URL}`;
+
+        try {
+            await bot.sendMessage(chatId, statusMessage, { parse_mode: 'Markdown' });
+        } catch (error) {
+            console.error(`❌ Status command error via ${name}:`, error.message);
+        }
     });
 
     // List command
@@ -359,26 +389,46 @@ Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
             }
 
             if (movies.length === 0) {
-                return bot.sendMessage(chatId, '❌ No movies available');
+                return await bot.sendMessage(chatId, `❌ No movies available via ${name}`);
             }
 
-            let response = `📚 Available Movies (${movies.length}):\n\n`;
+            let response = `📚 Recent Movies (${movies.length}) - ${name}:\n\n`;
 
             movies.forEach((movie, index) => {
                 response += `${index + 1}. 🎥 ${movie.title}`;
                 if (movie.year) response += ` (${movie.year})`;
+                if (movie.movieLanguage) response += ` - ${movie.movieLanguage}`;
                 response += `\n`;
             });
 
-            bot.sendMessage(chatId, response);
+            response += `\n💡 Type any movie name to search!`;
+
+            await bot.sendMessage(chatId, response);
 
         } catch (error) {
-            console.error('❌ List command error:', error);
-            bot.sendMessage(chatId, '⚠️ Error loading movie list');
+            console.error(`❌ List command error via ${name}:`, error.message);
+            await bot.sendMessage(chatId, '⚠️ Error loading movie list');
         }
     });
 
-    // Search functionality (main message handler)
+    // Website command
+    bot.onText(/\/website/, async(msg) => {
+        const chatId = msg.chat.id;
+
+        try {
+            await bot.sendMessage(chatId, `🌐 Visit our website: ${WEBSITE_URL}`, {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '🌐 Open Website', url: WEBSITE_URL }]
+                    ]
+                }
+            });
+        } catch (error) {
+            console.error(`❌ Website command error via ${name}:`, error.message);
+        }
+    });
+
+    // Main search functionality
     bot.on('message', async(msg) => {
         const chatId = msg.chat.id;
         const query = typeof msg.text === 'string' ? msg.text.trim() : '';
@@ -386,7 +436,7 @@ Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
         // Ignore empty or command messages
         if (!query || query.startsWith('/')) return;
 
-        console.log(`🔍 Search query from ${chatId}: "${query}" (Mode: ${isMongoConnected ? 'Online' : 'Offline'})`);
+        console.log(`🔍 Search query via ${name} from ${chatId}: "${query}" (Mode: ${isMongoConnected ? 'Online' : 'Offline'})`);
 
         try {
             let results = [];
@@ -410,11 +460,18 @@ Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
             }
 
             if (!results || results.length === 0) {
-                return bot.sendMessage(chatId, `❌ No results found for *${query}*\n\n💡 Try different keywords\n🔴 Mode: ${isMongoConnected ? 'Online' : 'Offline'}`, { parse_mode: 'Markdown' });
+                const noResultsMessage = `❌ No results found for *${query}* via ${name}\n\n` +
+                    `💡 Try different keywords like:\n` +
+                    `• Movie title (e.g., "Pushpa", "RRR")\n` +
+                    `• Actor name (e.g., "Allu Arjun")\n` +
+                    `• Genre (e.g., "Action", "Comedy")\n\n` +
+                    `🔴 Mode: ${isMongoConnected ? 'Online' : 'Offline'} | Movies: ${isMongoConnected ? 'Loading...' : offlineMovies.length}`;
+
+                return await bot.sendMessage(chatId, noResultsMessage, { parse_mode: 'Markdown' });
             }
 
             const mode = isMongoConnected ? '🟢' : '🔴';
-            await bot.sendMessage(chatId, `${mode} Found ${results.length} result(s) for *${query}*:`, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, `${mode} Found ${results.length} result(s) for *${query}* via ${name}:`, { parse_mode: 'Markdown' });
 
             for (const movie of results) {
                 const title = movie.title || 'Untitled';
@@ -423,13 +480,14 @@ Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
                 const language = movie.movieLanguage || 'N/A';
                 const poster = movie.poster;
                 const movieId = movie._id.toString();
-                const link = `https://moviemods.onrender.com/movies/download/${movieId}`;
+                const link = `${WEBSITE_URL}/movies/download/${movieId}`;
 
                 const caption = [
                     `🎬 *${title}*`,
                     `📅 Year: ${year}`,
                     `🎭 Genre: ${genre}`,
                     `🌐 Language: ${language}`,
+                    `🤖 Bot: ${name}`,
                     `📥 [Download Movie](${link})`
                 ].join('\n');
 
@@ -452,19 +510,139 @@ Last updated: ${new Date().toLocaleString()}`, { parse_mode: 'Markdown' });
             }
 
         } catch (error) {
-            console.error('❌ Bot search error:', error.message);
-            bot.sendMessage(chatId, '⚠️ An error occurred while searching. Please try again later.');
+            console.error(`❌ Bot search error via ${name}:`, error.message);
+            await bot.sendMessage(chatId, `⚠️ Search error via ${name}. Please try again later.`);
         }
     });
 
-    console.log(`✅ Telegram search listener is active (${mode} mode)`);
+    // Handle callback queries (inline buttons)
+    bot.on('callback_query', async(query) => {
+        const chatId = query.message.chat.id;
+
+        if (query.data === 'search_help') {
+            const helpMessage = `🔍 How to search movies via ${name}:\n\n` +
+                `1️⃣ Type any movie name\n` +
+                `2️⃣ Get instant results\n` +
+                `3️⃣ Click download links\n\n` +
+                `Examples:\n` +
+                `• Pushpa 2\n` +
+                `• RRR\n` +
+                `• KGF\n` +
+                `• Bahubali\n\n` +
+                `💡 You can also search by actor or genre!`;
+
+            try {
+                await bot.sendMessage(chatId, helpMessage);
+                await bot.answerCallbackQuery(query.id);
+            } catch (error) {
+                console.error(`❌ Callback query error via ${name}:`, error.message);
+            }
+        }
+    });
+
+    // Mark bot as active
+    botInfo.isActive = true;
+    activeBots.push(botInfo);
+}
+
+// Send notification to all active bots
+async function sendMultiBotNotification(message) {
+    try {
+        if (activeBots.length > 0) {
+            // Send to the first active bot's notification channel
+            const firstBot = activeBots[0];
+            await firstBot.bot.sendMessage(NOTIFICATION_CHAT_ID,
+                `${message}\n\n🤖 Active Bots: ${activeBots.length}\n` +
+                activeBots.map(b => `• ${b.name} (${b.username})`).join('\n')
+            );
+        }
+    } catch (error) {
+        console.error('❌ Multi-bot notification error:', error.message);
+    }
+}
+
+// Movie watcher for new movie notifications
+async function startMovieWatcher() {
+    if (!isMongoConnected) {
+        console.log('🔴 MongoDB not connected - skipping movie watcher');
+        return;
+    }
+
+    try {
+        console.log('🤖 Starting movie watcher for all bots...');
+        await sendMultiBotNotification('🎬 Movie watcher is now active across all bots!');
+
+        const changeStream = Movie.watch();
+
+        changeStream.on('change', async(data) => {
+            console.log('📡 Database change detected:', data.operationType);
+
+            if (data.operationType === 'insert') {
+                const movie = data.fullDocument;
+                console.log(`🎬 New movie added: ${movie.title}`);
+
+                // Add to offline backup
+                const movieForBackup = {
+                    ...movie,
+                    _id: movie._id.toString(),
+                    qualityLinks: typeof movie.qualityLinks === 'object' ? movie.qualityLinks : {}
+                };
+                offlineMovies.unshift(movieForBackup);
+                saveMoviesToFile();
+
+                const link = `${WEBSITE_URL}/movies/download/${movie._id}`;
+                const genre = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre || 'N/A';
+                const language = movie.movieLanguage || 'N/A';
+                const year = movie.year || 'N/A';
+                const title = movie.title || 'Untitled';
+
+                const caption = `🆕 *New Movie Added!*\n\n` +
+                    `🎬 *${title}*\n` +
+                    `📅 Year: ${year}\n` +
+                    `🎭 Genre: ${genre}\n` +
+                    `🌐 Language: ${language}\n` +
+                    `📥 [Download Movie](${link})`;
+
+                // Send notification via all active bots
+                for (const botInfo of activeBots) {
+                    try {
+                        if (movie.poster && movie.poster.startsWith('http')) {
+                            await botInfo.bot.sendPhoto(NOTIFICATION_CHAT_ID, movie.poster, {
+                                caption: caption + `\n\n🤖 Via: ${botInfo.name}`,
+                                parse_mode: 'Markdown'
+                            });
+                        } else {
+                            await botInfo.bot.sendMessage(NOTIFICATION_CHAT_ID,
+                                caption + `\n\n🤖 Via: ${botInfo.name}`, { parse_mode: 'Markdown' }
+                            );
+                        }
+
+                        console.log(`✅ New movie notification sent via ${botInfo.name}`);
+
+                        // Delay between bots to avoid spam
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    } catch (err) {
+                        console.error(`❌ Notification error via ${botInfo.name}:`, err.message);
+                    }
+                }
+            }
+        });
+
+        changeStream.on('error', (error) => {
+            console.error('❌ Change stream error:', error);
+        });
+
+    } catch (error) {
+        console.error('❌ Movie watcher error:', error.message);
+    }
 }
 
 // ============================
-// 🔍 API ENDPOINTS (ENHANCED FOR OFFLINE SUPPORT)
+// 🔍 API ENDPOINTS (SAME AS BEFORE)
 // ============================
 
-// FIXED: API endpoint for movie search
+// API endpoint for movie search
 app.get("/api/search", async(req, res) => {
     try {
         const query = req.query.q || '';
@@ -530,7 +708,8 @@ app.get("/api/movies", async(req, res) => {
                 totalPages: Math.ceil(total / limit),
                 totalMovies: total
             },
-            mode: isMongoConnected ? 'online' : 'offline'
+            mode: isMongoConnected ? 'online' : 'offline',
+            activeBots: activeBots.length
         });
 
     } catch (err) {
@@ -540,21 +719,18 @@ app.get("/api/movies", async(req, res) => {
 });
 
 // ============================
-// 🏠 HOMEPAGE (FIXED FOR OFFLINE SUPPORT)
+// 🏠 HOMEPAGE (SAME AS BEFORE BUT WITH BOT INFO)
 // ============================
 app.get("/", async(req, res) => {
     try {
         console.log("📥 Homepage request received");
-        console.log("Query params:", req.query);
         console.log(`🔧 Mode: ${isMongoConnected ? 'Online' : 'Offline'} | Movies available: ${isMongoConnected ? 'Loading...' : offlineMovies.length}`);
-        console.log(`👨‍💼 Admin status: ${res.locals.isAdmin}`);
+        console.log(`🤖 Active bots: ${activeBots.length}`);
 
         const page = parseInt(req.query.page) || 1;
         const limit = 14;
         const searchQuery = (req.query.search || "").trim();
         const category = req.query.category;
-
-        console.log(`🔍 Search params - Page: ${page}, Search: "${searchQuery}", Category: "${category}"`);
 
         let movies = [];
         let totalMovies = 0;
@@ -562,9 +738,7 @@ app.get("/", async(req, res) => {
         if (isMongoConnected) {
             // Use MongoDB logic (original code)
             if (searchQuery) {
-                console.log("🔍 Performing MongoDB search query...");
                 const escapedSearch = escapeRegExp(searchQuery);
-
                 const searchFilter = {
                     $or: [
                         { title: { $regex: escapedSearch, $options: "i" } },
@@ -584,19 +758,13 @@ app.get("/", async(req, res) => {
                     .limit(limit);
 
                 totalMovies = await Movie.countDocuments(searchFilter);
-                console.log(`🔍 MongoDB search results: ${movies.length} movies found`);
-
             } else {
-                console.log("📋 Loading all movies from MongoDB...");
                 const query = {};
-
                 if (category && category !== "All Movies") {
                     query.genre = { $regex: category, $options: "i" };
-                    console.log(`📂 Filtering by category: ${category}`);
                 }
 
                 if (req.query.admin === "8892") {
-                    console.log("👨‍💼 Admin mode: Loading all movies");
                     movies = await Movie.find(query).sort({ createdAt: -1 });
                     totalMovies = movies.length;
                 } else {
@@ -606,20 +774,17 @@ app.get("/", async(req, res) => {
                         .skip((page - 1) * limit)
                         .limit(limit);
                 }
-
-                console.log(`📊 Found ${totalMovies} total movies, showing ${movies.length}`);
             }
         } else {
-            // FIXED: Use offline mode
+            // Use offline mode
             console.log("🔴 Using offline mode for homepage");
             console.log(`📚 Available offline movies: ${offlineMovies.length}`);
 
-            let filteredMovies = [...offlineMovies]; // Create a copy
+            let filteredMovies = [...offlineMovies];
 
             if (searchQuery) {
                 console.log(`🔍 Performing offline search for: "${searchQuery}"`);
                 filteredMovies = searchMoviesOffline(searchQuery);
-                console.log(`🔍 Offline search results: ${filteredMovies.length} movies found`);
             }
 
             if (category && category !== "All Movies") {
@@ -628,14 +793,11 @@ app.get("/", async(req, res) => {
                     movie.genre && Array.isArray(movie.genre) &&
                     movie.genre.some(g => g && g.toLowerCase().includes(category.toLowerCase()))
                 );
-                console.log(`📂 Category filter results: ${filteredMovies.length} movies`);
             }
 
             totalMovies = filteredMovies.length;
             const skip = (page - 1) * limit;
             movies = filteredMovies.slice(skip, skip + limit);
-
-            console.log(`📊 Offline pagination: Total ${totalMovies}, Page ${page}, Showing ${movies.length}`);
         }
 
         const totalPages = Math.ceil(totalMovies / limit);
@@ -647,10 +809,6 @@ app.get("/", async(req, res) => {
                 offlineMovies.slice(0, 4)
             ) : [];
 
-        console.log(`🎬 Trending movies: ${trendingMovies.length}`);
-        console.log(`👨‍💼 Final admin status: ${res.locals.isAdmin}`);
-        console.log(`📊 Final results: Mode: ${isMongoConnected ? 'Online' : 'Offline'}, Movies: ${movies.length}, Total: ${totalMovies}`);
-
         res.render("home", {
             movies,
             trendingMovies,
@@ -660,12 +818,13 @@ app.get("/", async(req, res) => {
             category,
             isAdmin: res.locals.isAdmin || false,
             isOffline: !isMongoConnected,
-            totalMovies: totalMovies
+            totalMovies: totalMovies,
+            activeBots: activeBots.length,
+            botList: activeBots.map(b => ({ name: b.name, username: b.username }))
         });
 
     } catch (err) {
         console.error("❌ Homepage Error:", err);
-        console.error("Stack trace:", err.stack);
         res.status(500).render("error", {
             message: "Error loading homepage: " + err.message,
             statusCode: 500
@@ -673,9 +832,57 @@ app.get("/", async(req, res) => {
     }
 });
 
+// ============================
+// 🤖 BOT MANAGEMENT ROUTES
+// ============================
+
+// Bot status page
+app.get("/bot", (req, res) => {
+    const botStats = activeBots.map(botInfo => ({
+        name: botInfo.name,
+        username: botInfo.username,
+        description: botInfo.description,
+        isActive: botInfo.isActive,
+        status: botInfo.isActive ? '🟢 Active' : '🔴 Inactive'
+    }));
+
+    res.render("bot", {
+        isAdmin: res.locals.isAdmin || false,
+        botStats,
+        totalBots: BOT_CONFIGS.length,
+        activeBots: activeBots.length,
+        isOffline: !isMongoConnected,
+        movieCount: isMongoConnected ? 'Loading...' : offlineMovies.length
+    });
+});
+
+// API endpoint to get bot status
+app.get("/api/bots", (req, res) => {
+    const botStats = bots.map(botInfo => ({
+        name: botInfo.name,
+        username: botInfo.username,
+        description: botInfo.description,
+        isActive: botInfo.isActive,
+        status: botInfo.isActive ? 'active' : 'inactive'
+    }));
+
+    res.json({
+        totalBots: BOT_CONFIGS.length,
+        activeBots: activeBots.length,
+        inactiveBots: BOT_CONFIGS.length - activeBots.length,
+        bots: botStats,
+        mode: isMongoConnected ? 'online' : 'offline',
+        movieCount: isMongoConnected ? 'loading' : offlineMovies.length
+    });
+});
+
+// ============================
+// REST OF YOUR ROUTES (ADMIN, MOVIE DETAILS, ETC.)
+// ============================
+
 // Initialize everything
 async function initializeApp() {
-    console.log('🚀 Initializing MovieMods App...');
+    console.log('🚀 Initializing Multi-Bot MovieMods App...');
 
     // First load offline backup
     const loaded = loadMoviesFromFile();
@@ -686,43 +893,25 @@ async function initializeApp() {
 
     console.log(`🎬 App initialized in ${isMongoConnected ? 'Online' : 'Offline'} mode`);
     console.log(`📚 Movies available: ${isMongoConnected ? 'Loading from DB...' : offlineMovies.length}`);
+    console.log(`🤖 Bots configured: ${BOT_CONFIGS.length}`);
 }
 
-// ============================
-// REST OF YOUR ROUTES (SAME AS BEFORE BUT WITH OFFLINE SUPPORT)
-// ============================
-
-// Bot page
-app.get("/bot", (req, res) => {
-    res.render("bot", {
-        isAdmin: res.locals.isAdmin || false
-    });
-});
-
-// FIXED: Admin routes with proper error handling
+// Admin routes
 app.get("/admin/add", (req, res) => {
-    console.log("📝 Admin add form requested");
-    console.log("Admin status:", res.locals.isAdmin);
-
     if (!res.locals.isAdmin) {
-        console.log("❌ Access denied - not admin");
         return res.redirect("/");
     }
 
     res.render("add", {
         errors: [],
         success: null,
-        adminQuery: req.query.admin
+        adminQuery: req.query.admin,
+        activeBots: activeBots.length
     });
 });
 
 app.post("/admin/add", async(req, res) => {
-    console.log("📤 Movie submission received");
-    console.log("Admin status:", res.locals.isAdmin);
-    console.log("Request body keys:", Object.keys(req.body));
-
     if (!res.locals.isAdmin) {
-        console.log("❌ Access denied - not admin");
         return res.redirect("/");
     }
 
@@ -752,7 +941,6 @@ app.post("/admin/add", async(req, res) => {
         }
 
         const errors = [];
-
         if (!movieData.title) errors.push({ msg: "Title is required" });
         if (!movieData.description || movieData.description.length < 10) {
             errors.push({ msg: "Description must be at least 10 characters" });
@@ -763,15 +951,13 @@ app.post("/admin/add", async(req, res) => {
         }
 
         if (errors.length > 0) {
-            console.log("❌ Validation errors:", errors);
             return res.render("add", {
                 errors,
                 success: null,
-                adminQuery: req.query.admin
+                adminQuery: req.query.admin,
+                activeBots: activeBots.length
             });
         }
-
-        console.log("💾 Creating movie...");
 
         if (isMongoConnected) {
             const newMovie = new Movie(movieData);
@@ -800,13 +986,14 @@ app.post("/admin/add", async(req, res) => {
         }
 
         const message = isMongoConnected ?
-            "🎉 Movie added successfully! Telegram notification will be sent automatically." :
-            "🎉 Movie added to offline storage! Will sync when database is available.";
+            `🎉 Movie added successfully! All ${activeBots.length} bots will send notifications automatically.` :
+            `🎉 Movie added to offline storage! Will sync and notify via ${activeBots.length} bots when database is available.`;
 
         res.render("add", {
             errors: [],
             success: message,
-            adminQuery: req.query.admin
+            adminQuery: req.query.admin,
+            activeBots: activeBots.length
         });
 
     } catch (err) {
@@ -814,12 +1001,13 @@ app.post("/admin/add", async(req, res) => {
         res.render("add", {
             errors: [{ msg: `Error saving movie: ${err.message}` }],
             success: null,
-            adminQuery: req.query.admin
+            adminQuery: req.query.admin,
+            activeBots: activeBots.length
         });
     }
 });
 
-// Movie details and download (enhanced for offline support)
+// Movie details and download (same as before)
 app.get("/movies/:id", async(req, res) => {
     try {
         const movieId = req.params.id;
@@ -838,7 +1026,6 @@ app.get("/movies/:id", async(req, res) => {
                 }).limit(6);
             }
         } else {
-            // Search in offline data
             movie = offlineMovies.find(m => m._id === movieId);
             if (movie) {
                 suggestions = offlineMovies.filter(m =>
@@ -857,10 +1044,8 @@ app.get("/movies/:id", async(req, res) => {
             });
         }
 
-        // Convert movie to plain object if it's from MongoDB
         const movieData = movie.toObject ? movie.toObject() : movie;
         if (movieData.qualityLinks && typeof movieData.qualityLinks === 'object') {
-            // Ensure qualityLinks is a plain object
             if (movieData.qualityLinks instanceof Map) {
                 movieData.qualityLinks = Object.fromEntries(movieData.qualityLinks);
             }
@@ -869,7 +1054,8 @@ app.get("/movies/:id", async(req, res) => {
         res.render("details", {
             movie: movieData,
             suggestions,
-            isAdmin: res.locals.isAdmin || false
+            isAdmin: res.locals.isAdmin || false,
+            activeBots: activeBots.length
         });
 
     } catch (err) {
@@ -881,7 +1067,7 @@ app.get("/movies/:id", async(req, res) => {
     }
 });
 
-// Download Page (enhanced for offline support)
+// Download Page
 app.get("/movies/download/:id", async(req, res) => {
     try {
         const movieId = req.params.id;
@@ -890,7 +1076,6 @@ app.get("/movies/download/:id", async(req, res) => {
         if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
             movie = await Movie.findById(movieId).lean();
         } else {
-            // Search in offline data
             movie = offlineMovies.find(m => m._id === movieId);
         }
 
@@ -901,7 +1086,6 @@ app.get("/movies/download/:id", async(req, res) => {
             });
         }
 
-        // Handle qualityLinks properly
         let qualityLinks = {};
         if (movie.qualityLinks) {
             if (movie.qualityLinks instanceof Map) {
@@ -922,7 +1106,6 @@ app.get("/movies/download/:id", async(req, res) => {
         if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
             await Movie.findByIdAndUpdate(movieId, { $inc: { downloads: 1 } });
         } else {
-            // Update in offline storage
             const movieIndex = offlineMovies.findIndex(m => m._id === movieId);
             if (movieIndex !== -1) {
                 offlineMovies[movieIndex].downloads = (offlineMovies[movieIndex].downloads || 0) + 1;
@@ -935,7 +1118,8 @@ app.get("/movies/download/:id", async(req, res) => {
                 ...movie,
                 qualityLinks
             },
-            isAdmin: res.locals.isAdmin || false
+            isAdmin: res.locals.isAdmin || false,
+            activeBots: activeBots.length
         });
     } catch (err) {
         console.error("❌ Error rendering download page:", err);
@@ -946,150 +1130,11 @@ app.get("/movies/download/:id", async(req, res) => {
     }
 });
 
-// Rest of admin routes (enhanced for offline support)
-app.get("/admin/edit/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
-    try {
-        const movieId = req.params.id;
-        let movie = null;
-
-        if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
-            movie = await Movie.findById(movieId);
-        } else {
-            movie = offlineMovies.find(m => m._id === movieId);
-        }
-
-        if (!movie) return res.status(404).render("error", {
-            message: "Movie not found",
-            statusCode: 404
-        });
-
-        // Convert to plain object and handle qualityLinks
-        const movieData = movie.toObject ? movie.toObject() : movie;
-        if (movieData.qualityLinks instanceof Map) {
-            movieData.qualityLinks = Object.fromEntries(movieData.qualityLinks);
-        }
-
-        res.render("edit", {
-            movie: movieData,
-            adminQuery: req.query.admin,
-            errors: [],
-            success: null
-        });
-    } catch (err) {
-        console.error("❌ Error loading edit form:", err);
-        res.status(500).render("error", {
-            message: "Error loading edit form",
-            statusCode: 500
-        });
-    }
-});
-
-app.post("/admin/edit/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
-    try {
-        const movieId = req.params.id;
-
-        const updatedData = {
-            title: typeof req.body.title === 'string' ? req.body.title.trim() : "",
-            description: typeof req.body.description === 'string' ? req.body.description.trim() : "",
-            cast: typeof req.body.cast === 'string' ? req.body.cast.split(',').map(x => x.trim()).filter(Boolean) : [],
-            genre: Array.isArray(req.body.genre) ? req.body.genre.map(g => g.trim()) : [],
-            movieLanguage: typeof req.body.movieLanguage === 'string' ? req.body.movieLanguage.trim() : "",
-            quality: Array.isArray(req.body.quality) ? req.body.quality.map(q => q.trim()) : [],
-            poster: typeof req.body.poster === 'string' ? req.body.poster.trim() : "",
-            screenshots: Array.isArray(req.body.screenshots) ? req.body.screenshots.map(s => s.trim()).filter(Boolean) : [],
-            views: parseInt(req.body.views) || 0,
-            downloads: parseInt(req.body.downloads) || 0,
-            year: parseInt(req.body.year) || new Date().getFullYear(),
-            qualityLinks: {}
-        };
-
-        // Handle quality links
-        if (req.body.qualityLinks && typeof req.body.qualityLinks === 'object') {
-            for (const [quality, link] of Object.entries(req.body.qualityLinks)) {
-                if (link && typeof link === 'string' && link.trim().length > 0) {
-                    updatedData.qualityLinks[quality] = link.trim();
-                }
-            }
-        }
-
-        if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
-            await Movie.findByIdAndUpdate(movieId, updatedData);
-            console.log("✅ Movie updated in MongoDB:", movieId);
-
-            // Also update in offline backup
-            const movieIndex = offlineMovies.findIndex(m => m._id === movieId);
-            if (movieIndex !== -1) {
-                offlineMovies[movieIndex] = {
-                    ...offlineMovies[movieIndex],
-                    ...updatedData,
-                    updatedAt: new Date().toISOString()
-                };
-                saveMoviesToFile();
-            }
-        } else {
-            // Update in offline storage only
-            const movieIndex = offlineMovies.findIndex(m => m._id === movieId);
-            if (movieIndex !== -1) {
-                offlineMovies[movieIndex] = {
-                    ...offlineMovies[movieIndex],
-                    ...updatedData,
-                    updatedAt: new Date().toISOString()
-                };
-                saveMoviesToFile();
-                console.log("✅ Movie updated in offline storage:", movieId);
-            }
-        }
-
-        res.redirect("/?admin=8892");
-    } catch (err) {
-        console.error("❌ Error updating movie:", err);
-        res.status(500).render("error", {
-            message: "Failed to update movie",
-            statusCode: 500
-        });
-    }
-});
-
-app.get("/admin/delete/:id", async(req, res) => {
-    if (!res.locals.isAdmin) return res.redirect("/");
-
-    try {
-        const movieId = req.params.id;
-
-        if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
-            await Movie.findByIdAndDelete(movieId);
-            console.log("🗑️ Movie deleted from MongoDB:", movieId);
-        }
-
-        // Also remove from offline backup
-        const originalLength = offlineMovies.length;
-        offlineMovies = offlineMovies.filter(m => m._id !== movieId);
-
-        if (offlineMovies.length < originalLength) {
-            saveMoviesToFile();
-            console.log("🗑️ Movie deleted from offline storage:", movieId);
-        }
-
-        res.redirect("/?admin=8892");
-    } catch (err) {
-        console.error("❌ Error deleting movie:", err);
-        res.status(500).render("error", {
-            message: "Failed to delete movie",
-            statusCode: 500
-        });
-    }
-});
-
-// ============================
-// 📄 STATIC PAGES
-// ============================
+// Static pages
 app.get("/about-us", (req, res) => {
     res.render("about", {
-        isAdmin: res.locals.isAdmin || false
+        isAdmin: res.locals.isAdmin || false,
+        activeBots: activeBots.length
     });
 });
 
@@ -1106,57 +1151,42 @@ app.get("/dmca", (req, res) => {
 });
 
 // ============================
-// 🔧 DEBUG ROUTES (ENHANCED)
+// 🔧 ENHANCED DEBUG ROUTES
 // ============================
 
-// Database Status Check
-app.get("/debug/db-status", async(req, res) => {
+// Multi-bot status check
+app.get("/debug/multi-bot-status", async(req, res) => {
     try {
-        let mongoStatus = "Disconnected";
-        let movieCount = 0;
-        let sampleMovies = [];
-
-        if (isMongoConnected) {
-            mongoStatus = "Connected";
-            movieCount = await Movie.countDocuments();
-            sampleMovies = await Movie.find().limit(3);
-        }
+        const botDetails = bots.map(botInfo => ({
+            name: botInfo.name,
+            username: botInfo.username,
+            isActive: botInfo.isActive,
+            token: botInfo.token ? botInfo.token.substring(0, 10) + '...' : 'Missing'
+        }));
 
         res.json({
-            mongodb: {
-                status: mongoStatus,
-                movieCount,
-                sampleMovies: sampleMovies.map(m => ({
-                    id: m._id,
-                    title: m.title,
-                    createdAt: m.createdAt
-                }))
+            totalConfigured: BOT_CONFIGS.length,
+            totalActive: activeBots.length,
+            totalInactive: BOT_CONFIGS.length - activeBots.length,
+            bots: botDetails,
+            database: {
+                status: isMongoConnected ? 'Connected' : 'Disconnected',
+                movieCount: isMongoConnected ? await Movie.countDocuments() : offlineMovies.length
             },
             offline: {
-                movieCount: offlineMovies.length,
-                backupFileExists: fs.existsSync(moviesBackupFile),
-                sampleMovies: offlineMovies.slice(0, 3).map(m => ({
-                    id: m._id,
-                    title: m.title,
-                    createdAt: m.createdAt
-                }))
-            },
-            currentMode: isMongoConnected ? 'Online' : 'Offline',
-            adminAuth: {
-                middleware: 'Working',
-                testUrl: '/?admin=8892'
+                moviesLoaded: offlineMovies.length,
+                backupFileExists: fs.existsSync(moviesBackupFile)
             }
         });
     } catch (err) {
         res.status(500).json({
-            status: "Error",
             error: err.message
         });
     }
 });
 
-// Test offline search
-app.get("/debug/test-search", async(req, res) => {
+// Test search across all modes
+app.get("/debug/test-multi-search", async(req, res) => {
     const query = req.query.q || 'test';
 
     try {
@@ -1181,6 +1211,7 @@ app.get("/debug/test-search", async(req, res) => {
         res.json({
             query,
             mode: isMongoConnected ? 'Online' : 'Offline',
+            activeBots: activeBots.length,
             results: {
                 online: {
                     count: onlineResults.length,
@@ -1191,7 +1222,7 @@ app.get("/debug/test-search", async(req, res) => {
                     movies: offlineResults.map(m => ({ id: m._id, title: m.title }))
                 }
             },
-            offlineMoviesTotal: offlineMovies.length
+            botStatus: activeBots.map(b => ({ name: b.name, active: b.isActive }))
         });
     } catch (err) {
         res.status(500).json({
@@ -1200,50 +1231,11 @@ app.get("/debug/test-search", async(req, res) => {
     }
 });
 
-// Force sync from MongoDB to file
-app.get("/debug/sync-to-file", async(req, res) => {
-    try {
-        if (!isMongoConnected) {
-            return res.json({
-                success: false,
-                message: "MongoDB not connected"
-            });
-        }
-
-        await syncMoviesToFile();
-
-        res.json({
-            success: true,
-            message: `Synced ${offlineMovies.length} movies from MongoDB to backup file`
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Test admin authentication
-app.get("/debug/test-admin", (req, res) => {
-    res.json({
-        isAdmin: res.locals.isAdmin,
-        adminQuery: req.query.admin,
-        correctPassword: "8892",
-        testUrls: {
-            asAdmin: "/debug/test-admin?admin=8892",
-            asUser: "/debug/test-admin",
-            addMovie: "/admin/add?admin=8892"
-        }
-    });
-});
-
 // ============================
-// 🌱 SEEDER ROUTE (ENHANCED)
+// 🌱 ENHANCED SEEDER
 // ============================
 app.get("/seed", async(req, res) => {
     try {
-        // Clear existing data first (optional)
         if (req.query.clear === 'true') {
             if (isMongoConnected) {
                 await Movie.deleteMany({});
@@ -1256,7 +1248,7 @@ app.get("/seed", async(req, res) => {
 
         const sampleMovies = [{
                 title: "Pushpa 2: The Rise",
-                description: "Pushpa returns with more action, drama, and intensity in this highly anticipated sequel. The story continues as Pushpa rises to even greater heights of power and faces new challenges.",
+                description: "Pushpa returns with more action, drama, and intensity in this highly anticipated sequel.",
                 cast: ["Allu Arjun", "Rashmika Mandanna", "Fahadh Faasil"],
                 genre: ["Action", "Drama", "Thriller"],
                 movieLanguage: "Hindi",
@@ -1265,11 +1257,7 @@ app.get("/seed", async(req, res) => {
                 views: 150000,
                 downloads: 25000,
                 poster: "https://via.placeholder.com/300x450/FF6B6B/FFFFFF?text=Pushpa+2",
-                screenshots: [
-                    "https://via.placeholder.com/800x450/FF6B6B/FFFFFF?text=Pushpa+2+Scene+1",
-                    "https://via.placeholder.com/800x450/4ECDC4/FFFFFF?text=Pushpa+2+Scene+2",
-                    "https://via.placeholder.com/800x450/45B7D1/FFFFFF?text=Pushpa+2+Scene+3"
-                ],
+                screenshots: ["https://via.placeholder.com/800x450/FF6B6B/FFFFFF?text=Scene+1"],
                 qualityLinks: {
                     "480p": "https://example.com/pushpa2-480p",
                     "720p": "https://example.com/pushpa2-720p",
@@ -1278,8 +1266,8 @@ app.get("/seed", async(req, res) => {
             },
             {
                 title: "RRR",
-                description: "A fictional story about two Indian revolutionaries, Alluri Sitarama Raju and Komaram Bheem, and their fight against the British Raj in the 1920s. An epic tale of friendship, betrayal, and revolution.",
-                cast: ["N. T. Rama Rao Jr.", "Ram Charan", "Alia Bhatt", "Ajay Devgn"],
+                description: "A fictional story about two Indian revolutionaries and their fight against the British Raj.",
+                cast: ["N. T. Rama Rao Jr.", "Ram Charan", "Alia Bhatt"],
                 genre: ["Action", "Drama", "History"],
                 movieLanguage: "Hindi",
                 quality: ["720p", "1080p", "4K"],
@@ -1287,81 +1275,11 @@ app.get("/seed", async(req, res) => {
                 views: 200000,
                 downloads: 35000,
                 poster: "https://via.placeholder.com/300x450/96CEB4/FFFFFF?text=RRR",
-                screenshots: [
-                    "https://via.placeholder.com/800x450/96CEB4/FFFFFF?text=RRR+Scene+1",
-                    "https://via.placeholder.com/800x450/FFEAA7/FFFFFF?text=RRR+Scene+2",
-                    "https://via.placeholder.com/800x450/DDA0DD/FFFFFF?text=RRR+Scene+3"
-                ],
+                screenshots: ["https://via.placeholder.com/800x450/96CEB4/FFFFFF?text=RRR+Scene"],
                 qualityLinks: {
                     "720p": "https://example.com/rrr-720p",
                     "1080p": "https://example.com/rrr-1080p",
                     "4K": "https://example.com/rrr-4k"
-                }
-            },
-            {
-                title: "KGF Chapter 2",
-                description: "The continuation of Rocky's journey as he rises to become the most feared and powerful man in the goldfields. The bloodiest chapter of K.G.F begins as Rocky takes control of the Kolar Gold Fields.",
-                cast: ["Yash", "Sanjay Dutt", "Srinidhi Shetty", "Raveena Tandon"],
-                genre: ["Action", "Crime", "Drama"],
-                movieLanguage: "Hindi",
-                quality: ["480p", "720p", "1080p"],
-                year: 2022,
-                views: 180000,
-                downloads: 30000,
-                poster: "https://via.placeholder.com/300x450/FF7675/FFFFFF?text=KGF+2",
-                screenshots: [
-                    "https://via.placeholder.com/800x450/FF7675/FFFFFF?text=KGF+2+Scene+1",
-                    "https://via.placeholder.com/800x450/74B9FF/FFFFFF?text=KGF+2+Scene+2",
-                    "https://via.placeholder.com/800x450/00B894/FFFFFF?text=KGF+2+Scene+3"
-                ],
-                qualityLinks: {
-                    "480p": "https://example.com/kgf2-480p",
-                    "720p": "https://example.com/kgf2-720p",
-                    "1080p": "https://example.com/kgf2-1080p"
-                }
-            },
-            {
-                title: "Bahubali 2: The Conclusion",
-                description: "The epic conclusion to the Bahubali saga. Why did Kattappa kill Bahubali? The answer lies in this spectacular finale that reveals the truth behind the betrayal.",
-                cast: ["Prabhas", "Rana Daggubati", "Anushka Shetty", "Tamannaah"],
-                genre: ["Action", "Drama", "Fantasy"],
-                movieLanguage: "Hindi",
-                quality: ["720p", "1080p", "4K"],
-                year: 2017,
-                views: 250000,
-                downloads: 45000,
-                poster: "https://via.placeholder.com/300x450/6C5CE7/FFFFFF?text=Bahubali+2",
-                screenshots: [
-                    "https://via.placeholder.com/800x450/6C5CE7/FFFFFF?text=Bahubali+2+Scene+1",
-                    "https://via.placeholder.com/800x450/A29BFE/FFFFFF?text=Bahubali+2+Scene+2",
-                    "https://via.placeholder.com/800x450/FD79A8/FFFFFF?text=Bahubali+2+Scene+3"
-                ],
-                qualityLinks: {
-                    "720p": "https://example.com/bahubali2-720p",
-                    "1080p": "https://example.com/bahubali2-1080p",
-                    "4K": "https://example.com/bahubali2-4k"
-                }
-            },
-            {
-                title: "War",
-                description: "An Indian action thriller film about an Indian RAW agent who is assigned to eliminate his former mentor who has gone rogue. High-octane action sequences and stunning visuals.",
-                cast: ["Hrithik Roshan", "Tiger Shroff", "Vaani Kapoor"],
-                genre: ["Action", "Thriller", "Adventure"],
-                movieLanguage: "Hindi",
-                quality: ["480p", "720p", "1080p"],
-                year: 2019,
-                views: 120000,
-                downloads: 20000,
-                poster: "https://via.placeholder.com/300x450/2D3436/FFFFFF?text=War",
-                screenshots: [
-                    "https://via.placeholder.com/800x450/2D3436/FFFFFF?text=War+Scene+1",
-                    "https://via.placeholder.com/800x450/636E72/FFFFFF?text=War+Scene+2",
-                    "https://via.placeholder.com/800x450/B2BEC3/FFFFFF?text=War+Scene+3"
-                ],
-                qualityLinks: {
-                    "480p": "https://example.com/war-480p",
-                    "720p": "https://example.com/war-720p",
-                    "1080p": "https://example.com/war-1080p"
                 }
             }
         ];
@@ -1372,14 +1290,10 @@ app.get("/seed", async(req, res) => {
             const createdMovies = await Movie.insertMany(sampleMovies);
             result.mongodb = {
                 success: true,
-                count: createdMovies.length,
-                movies: createdMovies.map(m => ({ id: m._id, title: m.title }))
+                count: createdMovies.length
             };
-
-            // Also sync to offline backup
             await syncMoviesToFile();
         } else {
-            // Add to offline storage
             for (const movieData of sampleMovies) {
                 const newMovie = {
                     ...movieData,
@@ -1390,20 +1304,23 @@ app.get("/seed", async(req, res) => {
                 offlineMovies.unshift(newMovie);
             }
             saveMoviesToFile();
-
             result.offline = {
                 success: true,
-                count: sampleMovies.length,
-                movies: sampleMovies.map(m => ({ title: m.title }))
+                count: sampleMovies.length
             };
+        }
+
+        // Send notification via all bots
+        if (activeBots.length > 0) {
+            await sendMultiBotNotification(`🎬 ${sampleMovies.length} sample movies added to the database!`);
         }
 
         res.json({
             success: true,
             mode: isMongoConnected ? 'Online' : 'Offline',
             message: `✅ Successfully added ${sampleMovies.length} movies!`,
-            adminTestUrl: "/?admin=8892",
-            addMovieUrl: "/admin/add?admin=8892",
+            activeBots: activeBots.length,
+            botNames: activeBots.map(b => b.name),
             ...result
         });
 
@@ -1433,76 +1350,24 @@ app.use((err, req, res, next) => {
         isAdmin: res.locals.isAdmin || false
     });
 });
-// Add these debug routes to your app.js
 
-// Debug route to check app status
-app.get('/debug/status', (req, res) => {
-    res.json({
-        mongoConnected: isMongoConnected,
-        offlineMoviesCount: offlineMovies ? offlineMovies.length : 0,
-        offlineMoviesLoaded: !!offlineMovies,
-        mode: isMongoConnected ? 'Online' : 'Offline'
-    });
-});
-
-// Debug route to check movies availability
-app.get('/debug/movies', async(req, res) => {
-    try {
-        let mongoCount = 0;
-        let offlineCount = offlineMovies ? offlineMovies.length : 0;
-
-        if (isMongoConnected) {
-            mongoCount = await Movie.countDocuments();
-        }
-
-        res.json({
-            mongoConnected: isMongoConnected,
-            mongoMoviesCount: mongoCount,
-            offlineMoviesCount: offlineCount,
-            sampleOfflineMovie: offlineMovies ? offlineMovies[0] : null
-        });
-    } catch (error) {
-        res.json({ error: error.message });
-    }
-});
-
-// Debug route to test movie loading logic
-app.get('/debug/test-movie-load', async(req, res) => {
-    try {
-        let movies = [];
-        let source = '';
-
-        if (isMongoConnected) {
-            movies = await Movie.find({}).limit(5).lean();
-            source = 'MongoDB';
-        } else {
-            movies = offlineMovies ? offlineMovies.slice(0, 5) : [];
-            source = 'Offline Backup';
-        }
-
-        res.json({
-            source: source,
-            movieCount: movies.length,
-            movies: movies.map(m => ({ title: m.title, year: m.year }))
-        });
-    } catch (error) {
-        res.json({ error: error.message, source: 'Error' });
-    }
-});
 // ============================
 // 🚀 START SERVER
 // ============================
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Multi-Bot Movie Server running at http://localhost:${PORT}`);
+    console.log(`📱 Configured Bots: ${BOT_CONFIGS.length}`);
+    BOT_CONFIGS.forEach((bot, index) => {
+        console.log(`   ${index + 1}. ${bot.name} (${bot.username})`);
+    });
     console.log(`🔧 Admin access: http://localhost:${PORT}/?admin=8892`);
     console.log(`➕ Add movies: http://localhost:${PORT}/admin/add?admin=8892`);
-    console.log(`🔧 Debug routes available:`);
-    console.log(`   - GET /debug/db-status - Check database and offline status`);
-    console.log(`   - GET /debug/test-search?q=movie - Test search functionality`);
-    console.log(`   - GET /debug/sync-to-file - Force sync MongoDB to backup file`);
-    console.log(`   - GET /debug/test-admin?admin=8892 - Test admin authentication`);
-    console.log(`   - GET /seed - Add sample movies`);
-    console.log(`   - GET /seed?clear=true - Clear and add sample movies`);
+    console.log(`🤖 Bot status: http://localhost:${PORT}/bot`);
+    console.log(`🔧 Multi-bot debug routes:`);
+    console.log(`   - GET /debug/multi-bot-status - Check all bot status`);
+    console.log(`   - GET /debug/test-multi-search?q=movie - Test search across all modes`);
+    console.log(`   - GET /api/bots - Bot API status`);
+    console.log(`   - GET /seed - Add sample movies and notify all bots`);
 
     // Initialize the app
     initializeApp();

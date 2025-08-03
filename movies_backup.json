@@ -958,8 +958,9 @@
     "rating": 0,
     "isActive": true,
     "createdAt": "2025-07-26T18:34:35.674Z",
-    "updatedAt": "2025-07-26T18:34:35.679Z",
-    "__v": 0
+    "updatedAt": "2025-08-02T15:05:56.392Z",
+    "__v": 0,
+    "downloads": 3
   },
   {
     "_id": "688791d121b428538a181ca0",
@@ -1172,7 +1173,7 @@
     "title": "Loki S01 (2021) (Hindi + English) Dual Audio Completed Web Series BluRay HEVC ESub",
     "year": 2021,
     "views": 350,
-    "downloads": 230,
+    "downloads": 234,
     "description": "After stealing the Tesseract during the events of Avengers: Endgame, an alter--nate version of Loki is brought to the mysterious Time Variance Authority (TVA), a bureaucratic organization that exists outside of time and space and monitors the timeline. They give Loki a choice: face being erased from existence due to being a “time variant”, or help fix the timeline and stop a greater threat. Loki ends up trapped in his own crime thriller, traveling through time and alter--ing human history.",
     "cast": [
       "Tom Hiddleston",
@@ -1217,14 +1218,15 @@
       "1080p": "https://new3.filesdl.site/cloud/uAs4L7xij2"
     },
     "createdAt": "2025-07-28T15:31:08.508Z",
-    "__v": 0
+    "__v": 0,
+    "updatedAt": "2025-08-02T15:10:23.819Z"
   },
   {
     "_id": "6887984f4c494833a7ccfa8f",
     "title": "Loki S02 (2023) (Hindi + English) Dual Audio Completed Web Series HEVC ESub",
     "year": 2023,
     "views": 0,
-    "downloads": 0,
+    "downloads": 1,
     "description": "Following the multiversal calamity in the first season, Loki (Tom Hiddleston) finds himself in an alter-nate Time Variance Authority, where' no one knows who he is — and He Who Remains (Jonathan Majors) seems to be the TVA overlord.",
     "cast": [
       "Tom Hiddleston",
@@ -1265,6 +1267,98 @@
       "1080p": "https://new3.filesdl.site/cloud/xONCp0V4zJ"
     },
     "createdAt": "2025-07-28T15:33:35.780Z",
+    "__v": 0,
+    "updatedAt": "2025-08-02T15:06:20.556Z"
+  },
+  {
+    "_id": "688e45c2bda177de1aa42a59",
+    "title": "deloa",
+    "description": "le:\r\n   - GET /debug/db-status - Check database and offline status\r\n   - GET /debug/test-search?q=movie - Test search functionality",
+    "cast": [
+      "Lee Jung-jae",
+      "Wi Ha-joon",
+      "Lee Byung-hun",
+      "Yim Si-wan",
+      "Jo Yuri",
+      "Park Sung-hoon",
+      "Lee Da-wit"
+    ],
+    "genre": [
+      "Web Series",
+      "South Hindi Dubbed"
+    ],
+    "movieLanguage": "English",
+    "quality": [],
+    "poster": "https://i.ibb.co/842kLf4b/Squid-Game-season-3-poster.png",
+    "screenshots": [
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg"
+    ],
+    "year": 2022,
+    "views": 0,
+    "downloads": 0,
+    "qualityLinks": {
+      "480p": "https://new3.filesdl.site/cloud/h37N4B9lLw",
+      "720p": "https://new3.filesdl.site/cloud/YoyAPN8Rhw"
+    },
+    "createdAt": "2025-08-02T17:07:14.854Z",
+    "updatedAt": "2025-08-02T17:07:14.854Z",
+    "__v": 0
+  },
+  {
+    "_id": "688ee9ae9dec5bbaa3cc1d89",
+    "title": "deloar",
+    "description": "Configured Bots: 4\r\n   1. Movieshub (@Mhubsbot)\r\n   2. Moviemods (@Moviemodsbot)\r\n   3. Moveshub (@Movhubsbot)\r\n   4. Movieshubbot (@movhubs_bot)",
+    "cast": [
+      "Starcast: Kamal Haasan",
+      "Silambarasan",
+      "Trisha Krishnan",
+      "Ashok Selvan",
+      "Abhirami",
+      "Nasaar",
+      "Joju George",
+      "Ali Fazal",
+      "Mahesh Manjrekar",
+      "Sanjana Krishnamoorthy",
+      "Aishwarya Lekshmi",
+      "Tanikella Bharani",
+      "Rohit Saraf",
+      "Vaiyapuri",
+      "Chinni Jayanth",
+      "Vadivukarasi",
+      "Bagavathi Perumal",
+      "Sanya Malhotra",
+      "Baburaj",
+      "Sreekanth Menon"
+    ],
+    "genre": [
+      "Web Series",
+      "South Hindi Dubbed"
+    ],
+    "movieLanguage": "French",
+    "quality": [
+      "480p",
+      "720p"
+    ],
+    "poster": "https://i.ibb.co/842kLf4b/Squid-Game-season-3-poster.png",
+    "screenshots": [
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg",
+      "https://i.imgur.com/fXW7XJ3.jpg"
+    ],
+    "year": 2021,
+    "views": 0,
+    "downloads": 0,
+    "qualityLinks": {
+      "480p": "https://new3.filesdl.site/cloud/h37N4B9lLw",
+      "720p": "https://new3.filesdl.site/cloud/YoyAPN8Rhw",
+      "1080p": "https://new3.filesdl.site/cloud/moI427eiFK"
+    },
+    "createdAt": "2025-08-03T04:46:38.888Z",
+    "updatedAt": "2025-08-03T04:46:38.888Z",
     "__v": 0
   }
 ]
