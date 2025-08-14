@@ -1006,7 +1006,518 @@ app.post("/admin/add", async(req, res) => {
         });
     }
 });
+// ============================
+// 🔧 ADMIN DELETE AND EDIT FUNCTIONS
+// ============================
+// ============================
+// 🔧 ADMIN DELETE AND EDIT FUNCTIONS
+// ============================
 
+// Admin delete movie
+app.post("/admin/delete/:id", async(req, res) => {
+    console.log('🗑️ Admin delete request:', req.params.id, 'IsAdmin:', res.locals.isAdmin);
+
+    if (!res.locals.isAdmin) {
+        console.log('❌ Unauthorized delete attempt');
+        return res.status(403).json({
+            success: false,
+            message: "Unauthorized - Admin access required"
+        });
+    }
+
+    try {
+        const movieId = req.params.id;
+        let deleteResult = { success: false, message: '' };
+
+        if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
+            // Delete from MongoDB
+            const movie = await Movie.findByIdAndDelete(movieId);
+            if (movie) {
+                deleteResult = { success: true, message: `Movie "${movie.title}" deleted from database` };
+                console.log(`✅ Movie deleted from MongoDB: ${movie.title}`);
+
+                // Also remove from offline backup
+                const offlineIndex = offlineMovies.findIndex(m => m._id === movieId);
+                if (offlineIndex !== -1) {
+                    offlineMovies.splice(offlineIndex, 1);
+                    saveMoviesToFile();
+                    console.log('✅ Movie also removed from offline backup');
+                }
+            } else {
+                deleteResult = { success: false, message: "Movie not found in database" };
+            }
+        } else {
+            // Delete from offline storage only
+            const offlineIndex = offlineMovies.findIndex(m => m._id === movieId);
+            if (offlineIndex !== -1) {
+                const deletedMovie = offlineMovies.splice(offlineIndex, 1)[0];
+                saveMoviesToFile();
+                deleteResult = { success: true, message: `Movie "${deletedMovie.title}" deleted from offline storage` };
+                console.log(`✅ Movie deleted from offline storage: ${deletedMovie.title}`);
+            } else {
+                deleteResult = { success: false, message: "Movie not found in offline storage" };
+            }
+        }
+
+        if (deleteResult.success && activeBots.length > 0) {
+            // Notify via bots
+            await sendMultiBotNotification(`🗑️ Admin deleted a movie via ${activeBots.length} bots`);
+        }
+
+        // Return JSON for AJAX requests or redirect for form submissions
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            res.json(deleteResult);
+        } else {
+            const message = deleteResult.success ? 'success=' + encodeURIComponent(deleteResult.message) :
+                'error=' + encodeURIComponent(deleteResult.message);
+            res.redirect(`/?admin=8892&${message}`);
+        }
+
+    } catch (err) {
+        console.error("❌ Admin delete error:", err);
+        const errorMessage = `Delete failed: ${err.message}`;
+
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            res.status(500).json({ success: false, message: errorMessage });
+        } else {
+            res.redirect(`/?admin=8892&error=${encodeURIComponent(errorMessage)}`);
+        }
+    }
+});
+
+// Admin edit movie - GET route (show edit form)
+app.get("/admin/edit/:id", async(req, res) => {
+    console.log('✏️ Admin edit form request:', req.params.id, 'IsAdmin:', res.locals.isAdmin);
+
+    if (!res.locals.isAdmin) {
+        return res.redirect("/?error=" + encodeURIComponent("Admin access required"));
+    }
+
+    try {
+        const movieId = req.params.id;
+        let movie = null;
+
+        if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
+            movie = await Movie.findById(movieId);
+        } else {
+            movie = offlineMovies.find(m => m._id === movieId);
+        }
+
+        if (!movie) {
+            return res.redirect("/?admin=8892&error=" + encodeURIComponent("Movie not found"));
+        }
+
+        // Convert movie data for form
+        const movieData = movie.toObject ? movie.toObject() : movie;
+
+        // Handle qualityLinks properly
+        let qualityLinks = {};
+        if (movieData.qualityLinks) {
+            if (movieData.qualityLinks instanceof Map) {
+                qualityLinks = Object.fromEntries(movieData.qualityLinks);
+            } else if (typeof movieData.qualityLinks === 'object') {
+                qualityLinks = movieData.qualityLinks;
+            }
+        }
+
+        res.render("edit", {
+            movie: {
+                ...movieData,
+                qualityLinks
+            },
+            errors: [],
+            success: null,
+            adminQuery: req.query.admin || "8892",
+            activeBots: activeBots.length
+        });
+
+    } catch (err) {
+        console.error("❌ Admin edit form error:", err);
+        res.redirect("/?admin=8892&error=" + encodeURIComponent(`Edit form error: ${err.message}`));
+    }
+});
+
+// Admin edit movie - POST route (process edit form)
+app.post("/admin/edit/:id", async(req, res) => {
+            console.log('💾 Admin edit save request:', req.params.id, 'IsAdmin:', res.locals.isAdmin);
+
+            if (!res.locals.isAdmin) {
+                return res.redirect("/?error=" + encodeURIComponent("Admin access required"));
+            }
+
+            try {
+                const movieId = req.params.id;
+
+                // Prepare update data
+                const updateData = {
+                    title: typeof req.body.title === 'string' ? req.body.title.trim() : "",
+                    description: typeof req.body.description === 'string' ? req.body.description.trim() : "",
+                    year: parseInt(req.body.year) || new Date().getFullYear(),
+                    views: parseInt(req.body.views) || 0,
+                    downloads: parseInt(req.body.downloads) || 0,
+                    cast: typeof req.body.cast === 'string' ? req.body.cast.split(',').map(x => x.trim()).filter(Boolean) : [],
+                    genre: Array.isArray(req.body.genre) ? req.body.genre.map(g => g.trim()) : [],
+                    movieLanguage: typeof req.body.movieLanguage === 'string' ? req.body.movieLanguage.trim() : "",
+                    quality: Array.isArray(req.body.quality) ? req.body.quality.map(q => q.trim()) : [],
+                    poster: typeof req.body.poster === 'string' ? req.body.poster.trim() : "",
+                    screenshots: Array.isArray(req.body.screenshots) ? req.body.screenshots.map(s => s.trim()).filter(Boolean) : [],
+                    qualityLinks: {}
+                };
+
+                // Handle quality links
+                if (req.body.qualityLinks && typeof req.body.qualityLinks === 'object') {
+                    for (const [quality, link] of Object.entries(req.body.qualityLinks)) {
+                        if (link && typeof link === 'string' && link.trim().length > 0) {
+                            updateData.qualityLinks[quality] = link.trim();
+                        }
+                    }
+                }
+
+                // Validation
+                const errors = [];
+                if (!updateData.title) errors.push({ msg: "Title is required" });
+                if (!updateData.description || updateData.description.length < 10) {
+                    errors.push({ msg: "Description must be at least 10 characters" });
+                }
+                if (!updateData.movieLanguage) errors.push({ msg: "Language is required" });
+                if (!updateData.genre || updateData.genre.length === 0) {
+                    errors.push({ msg: "At least one genre is required" });
+                }
+
+                if (errors.length > 0) {
+                    // Re-render edit form with errors
+                    let movie = null;
+                    if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
+                        movie = await Movie.findById(movieId);
+                    } else {
+                        movie = offlineMovies.find(m => m._id === movieId);
+                    }
+
+                    if (!movie) {
+                        return res.redirect("/?admin=8892&error=" + encodeURIComponent("Movie not found"));
+                    }
+
+                    return res.render("edit", {
+                        movie: {
+                            ...(movie.toObject ? movie.toObject() : movie),
+                            ...updateData // Keep user input
+                        },
+                        errors,
+                        success: null,
+                        adminQuery: req.query.admin || "8892",
+                        activeBots: activeBots.length
+                    });
+                }
+
+                // Update movie
+                let updateResult = { success: false, message: '' };
+
+                if (isMongoConnected && mongoose.Types.ObjectId.isValid(movieId)) {
+                    // Update in MongoDB
+                    const updatedMovie = await Movie.findByIdAndUpdate(
+                        movieId, {...updateData, updatedAt: new Date() }, { new: true, runValidators: true }
+                    );
+
+                    if (updatedMovie) {
+                        updateResult = { success: true, message: `Movie "${updatedMovie.title}" updated successfully` };
+                        console.log(`✅ Movie updated in MongoDB: ${updatedMovie.title}`);
+
+                        // Also update in offline backup
+                        const offlineIndex = offlineMovies.findIndex(m => m._id === movieId);
+                        if (offlineIndex !== -1) {
+                            offlineMovies[offlineIndex] = {
+                                ...updatedMovie.toObject(),
+                                _id: updatedMovie._id.toString(),
+                                qualityLinks: updatedMovie.qualityLinks ? Object.fromEntries(updatedMovie.qualityLinks) : {}
+                            };
+                            saveMoviesToFile();
+                            console.log('✅ Movie also updated in offline backup');
+                        }
+                    } else {
+                        updateResult = { success: false, message: "Movie not found in database" };
+                    }
+                } else {
+                    // Update in offline storage only
+                    const offlineIndex = offlineMovies.findIndex(m => m._id === movieId);
+                    if (offlineIndex !== -1) {
+                        offlineMovies[offlineIndex] = {
+                            ...offlineMovies[offlineIndex],
+                            ...updateData,
+                            updatedAt: new Date().toISOString()
+                        };
+                        saveMoviesToFile();
+                        updateResult = { success: true, message: `Movie "${updateData.title}" updated in offline storage` };
+                        console.log(`✅ Movie updated in offline storage: ${updateData.title}`);
+                    } else {
+                        updateResult = { success: false, message: "Movie not found in offline storage" };
+                    }
+                }
+
+                if (updateResult.success && activeBots.length > 0) {
+                    // Notify via bots
+                    await sendMultiBotNotification(`✏️ Admin updated a movie: "${updateData.title}"`);
+                }
+
+                // Redirect with success/error message
+                const message = updateResult.success ? 'success=' + encodeURIComponent(updateResult.message) :
+                    'error=' + encodeURIComponent(updateResult.message);
+                res.redirect(`/?admin=8892&${message}`);
+
+            } catch (err) {
+                console.error("❌ Admin edit save error:", err);
+                res.redirect(`/?admin=8892&error=${encodeURIComponent(`Update failed: ${err.message}`)}`);
+    }
+});
+
+// Enhanced homepage route with success/error message handling
+app.get("/", async (req, res) => {
+    try {
+        console.log("📥 Homepage request received");
+        console.log(`🔧 Mode: ${isMongoConnected ? 'Online' : 'Offline'} | Movies available: ${isMongoConnected ? 'Loading...' : offlineMovies.length}`);
+        console.log(`🤖 Active bots: ${activeBots.length}`);
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 14;
+        const searchQuery = (req.query.search || "").trim();
+        const category = req.query.category;
+
+        // Extract success/error messages from query params
+        const successMessage = req.query.success;
+        const errorMessage = req.query.error;
+
+        let movies = [];
+        let totalMovies = 0;
+
+        if (isMongoConnected) {
+            // Use MongoDB logic (original code)
+            if (searchQuery) {
+                const escapedSearch = escapeRegExp(searchQuery);
+                const searchFilter = {
+                    $or: [
+                        { title: { $regex: escapedSearch, $options: "i" } },
+                        { description: { $regex: escapedSearch, $options: "i" } },
+                        { cast: { $in: [new RegExp(escapedSearch, "i")] } },
+                        { genre: { $in: [new RegExp(escapedSearch, "i")] } }
+                    ]
+                };
+
+                if (category && category !== "All Movies") {
+                    searchFilter.genre = { $regex: category, $options: "i" };
+                }
+
+                movies = await Movie.find(searchFilter)
+                    .sort({ createdAt: -1 })
+                    .skip((page - 1) * limit)
+                    .limit(limit);
+
+                totalMovies = await Movie.countDocuments(searchFilter);
+            } else {
+                const query = {};
+                if (category && category !== "All Movies") {
+                    query.genre = { $regex: category, $options: "i" };
+                }
+
+                if (req.query.admin === "8892") {
+                    movies = await Movie.find(query).sort({ createdAt: -1 });
+                    totalMovies = movies.length;
+                } else {
+                    totalMovies = await Movie.countDocuments(query);
+                    movies = await Movie.find(query)
+                        .sort({ createdAt: -1 })
+                        .skip((page - 1) * limit)
+                        .limit(limit);
+                }
+            }
+        } else {
+            // Use offline mode
+            console.log("🔴 Using offline mode for homepage");
+            console.log(`📚 Available offline movies: ${offlineMovies.length}`);
+
+            let filteredMovies = [...offlineMovies];
+
+            if (searchQuery) {
+                console.log(`🔍 Performing offline search for: "${searchQuery}"`);
+                filteredMovies = searchMoviesOffline(searchQuery);
+            }
+
+            if (category && category !== "All Movies") {
+                console.log(`📂 Filtering offline movies by category: ${category}`);
+                filteredMovies = filteredMovies.filter(movie =>
+                    movie.genre && Array.isArray(movie.genre) &&
+                    movie.genre.some(g => g && g.toLowerCase().includes(category.toLowerCase()))
+                );
+            }
+
+            totalMovies = filteredMovies.length;
+            const skip = (page - 1) * limit;
+            movies = filteredMovies.slice(skip, skip + limit);
+        }
+
+        const totalPages = Math.ceil(totalMovies / limit);
+
+        // Get trending movies
+        const trendingMovies = !searchQuery && !category ?
+            (isMongoConnected ?
+                await Movie.find().sort({ createdAt: -1 }).limit(4) :
+                offlineMovies.slice(0, 4)
+            ) : [];
+
+        // Get all unique genres for filter dropdown
+        let allGenres = [];
+        if (isMongoConnected) {
+            const genreAggregation = await Movie.aggregate([
+                { $unwind: "$genre" },
+                { $group: { _id: "$genre" } },
+                { $sort: { _id: 1 } }
+            ]);
+            allGenres = genreAggregation.map(g => g._id);
+        } else {
+            const genreSet = new Set();
+            offlineMovies.forEach(movie => {
+                if (movie.genre && Array.isArray(movie.genre)) {
+                    movie.genre.forEach(g => genreSet.add(g));
+                }
+            });
+            allGenres = Array.from(genreSet).sort();
+        }
+
+        res.render("home", {
+            movies,
+            trendingMovies,
+            currentPage: page,
+            totalPages,
+            searchQuery,
+            category,
+            allGenres,
+            isAdmin: res.locals.isAdmin || false,
+            isOffline: !isMongoConnected,
+            totalMovies: totalMovies,
+            activeBots: activeBots.length,
+            botList: activeBots.map(b => ({ 
+                name: b.name, 
+                username: b.username,
+                isActive: b.isActive || false 
+            })),
+            successMessage,
+            errorMessage,
+            adminQuery: req.query.admin
+        });
+
+    } catch (err) {
+        console.error("❌ Homepage error:", err);
+        res.render("home", {
+            movies: [],
+            trendingMovies: [],
+            currentPage: 1,
+            totalPages: 0,
+            searchQuery: req.query.search || "",
+            category: req.query.category,
+            allGenres: [],
+            isAdmin: res.locals.isAdmin || false,
+            isOffline: !isMongoConnected,
+            totalMovies: 0,
+            activeBots: activeBots.length,
+            botList: [],
+            successMessage: null,
+            errorMessage: `Error loading homepage: ${err.message}`,
+            adminQuery: req.query.admin
+        });
+    }
+});
+
+// ============================
+// 🔧 UTILITY FUNCTIONS (Only add if not already defined)
+// ============================
+
+// Search movies in offline mode (only add if not already defined)
+if (typeof searchMoviesOffline === 'undefined') {
+    function searchMoviesOffline(searchQuery) {
+        if (!searchQuery) return offlineMovies;
+        
+        const query = searchQuery.toLowerCase();
+        return offlineMovies.filter(movie => {
+            return (
+                (movie.title && movie.title.toLowerCase().includes(query)) ||
+                (movie.description && movie.description.toLowerCase().includes(query)) ||
+                (movie.cast && Array.isArray(movie.cast) && 
+                 movie.cast.some(actor => actor.toLowerCase().includes(query))) ||
+                (movie.genre && Array.isArray(movie.genre) && 
+                 movie.genre.some(g => g.toLowerCase().includes(query)))
+            );
+        });
+    }
+}
+
+// Save movies to file (only add if not already defined)
+if (typeof saveMoviesToFile === 'undefined') {
+    function saveMoviesToFile() {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const moviesFilePath = path.join(__dirname, 'data', 'movies.json');
+            
+            // Ensure data directory exists
+            const dataDir = path.dirname(moviesFilePath);
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+            
+            fs.writeFileSync(moviesFilePath, JSON.stringify(offlineMovies, null, 2));
+            console.log(`✅ Saved ${offlineMovies.length} movies to offline backup`);
+        } catch (err) {
+            console.error('❌ Error saving movies to file:', err);
+        }
+    }
+}
+
+// Load movies from file (only add if not already defined)
+if (typeof loadMoviesFromFile === 'undefined') {
+    function loadMoviesFromFile() {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const moviesFilePath = path.join(__dirname, 'data', 'movies.json');
+            
+            if (fs.existsSync(moviesFilePath)) {
+                const data = fs.readFileSync(moviesFilePath, 'utf8');
+                const movies = JSON.parse(data);
+                offlineMovies.splice(0, offlineMovies.length, ...movies);
+                console.log(`✅ Loaded ${offlineMovies.length} movies from offline backup`);
+            } else {
+                console.log('📁 No offline backup file found');
+            }
+        } catch (err) {
+            console.error('❌ Error loading movies from file:', err);
+        }
+    }
+}
+
+// Send notification via multiple bots (only add if not already defined)
+if (typeof sendMultiBotNotification === 'undefined') {
+    async function sendMultiBotNotification(message) {
+        if (activeBots.length === 0) {
+            console.log('🤖 No active bots for notification');
+            return;
+        }
+
+        for (const bot of activeBots) {
+            try {
+                if (bot.isActive && bot.sendMessage) {
+                    await bot.sendMessage(message);
+                    console.log(`✅ Notification sent via bot: ${bot.name}`);
+                }
+            } catch (err) {
+                console.error(`❌ Failed to send notification via ${bot.name}:`, err);
+            }
+        }
+    }
+}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Movie details and download (same as before)
 app.get("/movies/:id", async(req, res) => {
     try {

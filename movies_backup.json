@@ -958,9 +958,9 @@
     "rating": 0,
     "isActive": true,
     "createdAt": "2025-07-26T18:34:35.674Z",
-    "updatedAt": "2025-08-02T15:05:56.392Z",
+    "updatedAt": "2025-08-03T07:21:59.966Z",
     "__v": 0,
-    "downloads": 3
+    "downloads": 4
   },
   {
     "_id": "688791d121b428538a181ca0",
@@ -1335,12 +1335,15 @@
     ],
     "genre": [
       "Web Series",
-      "South Hindi Dubbed"
+      "South Hindi Dubbed",
+      "Bollywood",
+      "Sport"
     ],
     "movieLanguage": "French",
     "quality": [
       "480p",
-      "720p"
+      "720p",
+      "4K"
     ],
     "poster": "https://i.ibb.co/842kLf4b/Squid-Game-season-3-poster.png",
     "screenshots": [
@@ -1349,7 +1352,7 @@
       "https://i.imgur.com/fXW7XJ3.jpg",
       "https://i.imgur.com/fXW7XJ3.jpg"
     ],
-    "year": 2021,
+    "year": 2024,
     "views": 0,
     "downloads": 0,
     "qualityLinks": {
@@ -1358,7 +1361,7 @@
       "1080p": "https://new3.filesdl.site/cloud/moI427eiFK"
     },
     "createdAt": "2025-08-03T04:46:38.888Z",
-    "updatedAt": "2025-08-03T04:46:38.888Z",
+    "updatedAt": "2025-08-04T04:54:40.460Z",
     "__v": 0
   }
 ]
