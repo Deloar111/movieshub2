@@ -19,7 +19,8 @@
         "lodash": "^4.17.21",
         "mongoose": "^8.17.0",
         "node-cache": "^5.1.2",
-        "node-telegram-bot-api": "^0.66.0"
+        "node-telegram-bot-api": "^0.66.0",
+        "package-name": "^0.1.0"
     },
     "devDependencies": {
         "autoprefixer": "^10.4.21",
