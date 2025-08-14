@@ -195,7 +195,7 @@ const BOT_CONFIGS = [{
 ];
 
 const NOTIFICATION_CHAT_ID = 6375810452;
-const WEBSITE_URL = 'https://moviemods.onrender.com';
+const WEBSITE_URL = 'https://moviesmod.onrender.com';
 
 // Store all bot instances
 let bots = [];
@@ -882,7 +882,7 @@ app.get("/api/bots", (req, res) => {
 
 // Initialize everything
 async function initializeApp() {
-    console.log('🚀 Initializing Multi-Bot MovieMods App...');
+    console.log('🚀 Initializing Multi-Bot MoviesMod App...');
 
     // First load offline backup
     const loaded = loadMoviesFromFile();
